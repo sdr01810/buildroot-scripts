@@ -1,0 +1,58 @@
+config {
+
+}
+
+image efi-part.vfat {
+
+  vfat {
+
+    file startup.nsh {
+
+      image = "efi-part/startup.nsh"
+    }
+
+    file EFI {
+
+      image = "efi-part/EFI"
+    }
+
+    file bzImage {
+
+      image = "bzImage"
+    }
+
+  }
+
+  size = 500M
+  #^-- long-standing rule of thumb: plenty of room...
+  #^-- ...but still safely below the LBA limit (504MiB)
+}
+
+image boot-disk.img {
+
+  hdimage {
+
+    gpt = true
+  }
+
+  partition boot {
+
+    partition-type-uuid = c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    #^-- EFI system partition (cf. discoverable partitions spec)
+
+    image = "efi-part.vfat"
+
+    bootable = true
+  }
+
+  partition root {
+
+    partition-type-uuid = 4f68bce3-e8cd-4db1-96e7-fbcaf984b709
+    #^-- root partition for an x86_64 machine (cf. discoverable partitions spec)
+
+    partition-uuid = @PARTITION_UUID@
+
+    image = "rootfs.ext2"
+  }
+
+}

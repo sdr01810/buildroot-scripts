@@ -1,0 +1,66 @@
+# hidden:
+
+config BR2_ROOTFS_OVERLAY_TAR_EXCLUSION_OPTS
+	string
+	default "--exclude=.empty --exclude='*~' --exclude-vcs"
+
+# visible: 
+
+menu "Rootfs overlay applied post-fakeroot"
+
+config BR2_ROOTFS_OVERLAY_POST_FAKEROOT_TARBALL_LIST
+	string "Root filesystem overlay tarballs"
+	default ""
+	help
+	  Specify a list of tarballs that are extracted onto the target
+	  rootfs after the build and the post-build stages have finished,
+	  at very the beginning of the post-fakeroot stage. This means the
+	  overlay(s) are applied to the rootfs while running as (fake) user
+	  root, just before the rootfs is packed into each selected
+	  filesystem image.
+
+	  This has the advantage of preserving the ownership and
+	  permissions of the overlay contents, as seen by the filesystem
+	  image being prepared (because of the fakeroot context).  On the
+	  other hand, it has the disadvantage of being performed separately
+	  for each filesystem image being created.
+
+          For example, if buildroot is configured to create both a cpio
+	  image and an ext2 image of the rootfs, then the overlay will be
+	  applied twice: once for the cpio image, and once for the ext2
+	  image.
+
+endmenu
+
+menu "Rootfs overlay creation using debootstrap(8)"
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH
+	string
+	default "$(KERNEL_ARCH)"
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE
+	string "Debian release name"
+	default ""
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT
+	string "Base set of packages"
+	default ""
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_LIST
+	string "Packages to include"
+	default ""
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_EXCLUSION_LIST
+	string "Packages to exclude"
+	default ""
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_FILE_LIST
+	string "Files that specify packages to include"
+	default ""
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_EXCLUSION_FILE_LIST
+	string "Files that specify packages to exclude"
+	default ""
+
+endmenu
+

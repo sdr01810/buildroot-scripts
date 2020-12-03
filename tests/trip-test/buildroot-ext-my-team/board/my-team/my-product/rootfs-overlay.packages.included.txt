@@ -1,0 +1,4 @@
+## Extra packages that should installed in the rootfs overlay.
+##
+
+net-tools

@@ -1,0 +1,4 @@
+## Packages that should not be installed in the rootfs overlay.
+##
+
+nano

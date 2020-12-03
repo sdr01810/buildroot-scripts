@@ -1,0 +1,5 @@
+# <user_name> <uid> <group> <gid> <password> <home> <shell> <groups> <comment>
+#
+
+debug -1 debug -1 =debug /home/debug /bin/bash root,sudo Debugging account (development only)
+

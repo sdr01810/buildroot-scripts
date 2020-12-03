@@ -1,0 +1,17 @@
+PRETTY_NAME_template="My Product GNU/Linux ${VERSION_ID} (${VERSION_CODENAME})"
+NAME="My Product GNU/Linux"
+
+VERSION_ID_template="${VERSION_ID}"
+VERSION_template="${VERSION_ID} (${VERSION_CODENAME})"
+
+VERSION_CODENAME_template=${VERSION_CODENAME}
+
+ID=my_product
+ID_LIKE_template=${ID_orig}
+
+# FIXME: provide these URLs:
+#
+# HOME_URL=""
+# SUPPORT_URL=""
+# BUG_REPORT_URL=""
+

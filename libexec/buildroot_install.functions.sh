@@ -1,0 +1,185 @@
+##/bin/bash
+## Provides function buildroot_install() and friends.
+## 
+
+[ -z "$buildroot_install_functions_p" ] || return 0
+
+buildroot_install_functions_p=t
+
+buildroot_install_debug_p=
+
+##
+
+source install_package.functions.sh
+
+##
+
+buildroot_artifact_signer_gpg_key_url= # TODO
+buildroot_artifact_signer_gpg_key_fingerprint= # TODO
+
+buildroot_version=2020.08 
+buildroot_download_url="https://buildroot.org/downloads"
+buildroot_artifact_url="${buildroot_download_url:?}/buildroot-${buildroot_version:?}.tar.gz"
+buildroot_artifact_sha1=2cbe3f7a807f62793421568b5320dd0232b82c53 # version-specific
+
+##
+
+function buildroot_install() { # [--everything | --dependencies-only]
+
+	local deps_p=t
+	local core_p=t
+
+	while [ $# -gt 0 ] ; do
+        case "${1}" in
+	--dependencies-only)
+		deps_p=t
+		core_p=
+
+		shift 1
+		;;
+	--everything)
+		deps_p=t
+		core_p=t
+
+		shift 1
+		;;
+	--)
+		shift 1
+	        break
+		;;
+	-*)
+		echo 1>&2 "${FUNCNAME:?}: unsupported option: ${1:?}"
+
+		return 2
+		;;
+	*|'')
+		echo 1>&2 "${FUNCNAME:?}: unsupported argument: ${1:?}"
+
+		return 2
+		;;
+	esac;done
+
+	! [ -n "${deps_p}" ] || buildroot_install_deps
+
+	! [ -n "${core_p}" ] || buildroot_install_core
+}
+
+function buildroot_install_core() {
+
+	local buildroot_artifact_fbn="${buildroot_artifact_url##*/}"
+	local buildroot_artifact_dbn="${buildroot_artifact_fbn%%.tar*}"
+	local buildroot_final_dbn="${buildroot_artifact_dbn%-${buildroot_version:?}}"
+	local x1
+
+	if [ ! -d "${buildroot_final_dbn:?}" ] ; then
+		if [ ! -s "${buildroot_artifact_fbn:?}" ] ; then
+			xx wget -q -O "${buildroot_artifact_fbn:?}" "${buildroot_artifact_url:?}"
+			xx echo "${buildroot_artifact_sha1:?} *${buildroot_artifact_fbn:?}" | xx sha1sum --check 
+		fi
+
+		if [ -e "${buildroot_artifact_dbn:?}" ] ; then
+			xx rm -rf "${buildroot_artifact_dbn:?}"
+		fi
+
+		xx tar xzf "${buildroot_artifact_fbn:?}"
+		xx mv "${buildroot_artifact_dbn:?}" "${buildroot_final_dbn:?}"
+	fi
+}
+
+function buildroot_install_deps() {
+
+	local packages=(
+		bc
+		binutils
+		bison
+		build-essential
+		coreutils
+		fakechroot
+		fakeroot
+		flex
+		libncurses5-dev
+		rsync
+		wget
+	)
+
+	packages+=(
+		python3
+		python-is-python3
+		python3-matplotlib
+		python3-numpy
+		graphviz
+	)
+
+	local packages_optional=()
+
+	packages_optional+=( debootstrap qemu-user-static binfmt-support )
+	#^-- rootfs overlay creation tools: qemu-debootstrap(8) and friends
+
+	packages_optional+=( libelf-dev libssl-dev )
+	#^-- needed to build linux for some target architectures;
+	#^-- for example: x86_64 UEFI
+
+	packages_optional+=( initramfs-tools )
+	#^-- initrd/initramfs creation tools
+
+	packages_optional+=( live-tools )
+	#^-- live CD creation tools
+
+	local commands_expected=(
+		bash
+		bc
+		bison
+		bzip2
+		chroot
+		cpio
+		fakechroot
+		fakeroot
+		file
+		flex
+		g++
+		gcc
+		gpg
+		gzip
+		make
+		patch
+		perl
+		rsync
+		sed
+		sha1sum
+		tar
+		unzip
+		which
+	)
+
+	local x1 xc
+
+	install_package "${packages[@]}"
+
+	for x1 in "${packages_optional[@]}" ; do
+		install_package "${x1:?}" || never_mind_optional_package
+	done
+
+	for x1 in "${commands_expected[@]}" ; do
+		if ! hash "${x1:?}" >/dev/null 2>&1 ; then
+			xc=$? ; echo 1>&2 "${FUNCNAME:?}: missing required command: ${x1:?}"
+		fi
+	done
+
+	return ${xc:-0}
+}
+
+function xx_buildroot_install() {
+
+	buildroot_install "$@"
+}
+
+function xx_buildroot_install_deps() {
+
+	buildroot_install_deps "$@"
+}
+
+function xx_buildroot_install_core() {
+
+	buildroot_install_core "$@"
+}
+
