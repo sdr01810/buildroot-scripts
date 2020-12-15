@@ -49,11 +49,9 @@ function file_contents_as_list_with_separator() { # separator [file_pn ...]
 
 	for f1 in "${files[@]}" ; do
 
-		local f1_contents_as_list_fragments_quoted="$(omit_wsac "${f1:?}")"
+		local f1_contents_as_list_fragments=( $(omit_wsac "${f1:?}") )
 
-		local f1_contents_as_list="$(
-			eval "as_list_with_separator ${separator_quoted:?} ${f1_contents_as_list_fragments_quoted//,/ }"
-		)"
+		local f1_contents_as_list="$(as_list_with_separator "${separator:?}" "${f1_contents_as_list_fragments[@]}")"
 
 		result="${result:+${result:?}${separator:?}}${f1_contents_as_list:?}"
 	done
