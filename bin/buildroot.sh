@@ -84,8 +84,8 @@
 ##     buildroot.all-output-trees.sh my_team_product_{xctc,main}_defconfig
 ##     buildroot.all-output-trees.sh --build my_team_product_{xctc,main}_defconfig
 ##     buildroot.all-output-trees.sh --clean-first my_team_product_{xctc,main}_defconfig
-##     
 ##     buildroot.all-output-trees.sh --clean-only
+##
 ##     buildroot.sh qemu-vm --run
 ##     buildroot.sh qemu-vm --run --using-initrd
 ##     buildroot.sh qemu-vm --run --using-boot-disk
