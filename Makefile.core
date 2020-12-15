@@ -205,6 +205,8 @@ targets_phony += dist
 
 targets += $(distribution_archive_files)
 
+dist :: stage
+
 dist :: $(distribution_archive_files)
 
 clobber ::
@@ -239,6 +241,8 @@ install.undo ::
 	@false
 endif
 endif
+
+install :: stage
 
 ifneq ($(installation_dir_unversioned),$(installation_dir)) 
 install :: $(installation_dir_unversioned)/.ts.installed
