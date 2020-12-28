@@ -1,4 +1,6 @@
 - *.swp
+- .*#
+- *#
 - *~
 
 - .ts.*
@@ -16,6 +18,6 @@
 
 - scratch
 - scratch-*
+- scratch.*
 
 - typescript
-

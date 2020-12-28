@@ -1,9 +1,13 @@
 *.swp
+.#*
+*#
 *~
 
 .all.*
 .out.*
+.du@*
 .sb.*
+
 .ts.*
 
 build-output
@@ -19,6 +23,7 @@ buildroot-*.tar.*
 
 scratch
 scratch-*
+scratch.*
 
 typescript
 
