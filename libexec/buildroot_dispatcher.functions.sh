@@ -278,7 +278,7 @@ function buildroot_dispatcher() { # ...
 		;;
 	esac
 
-	local invoke=( xx_env )
+	local invoke=( xx /usr/bin/env )
 	local action_cmd=() 
 
 	case "${action:?}" in
@@ -291,7 +291,7 @@ function buildroot_dispatcher() { # ...
 		;;
 
 	eval)
-		action_cmd=() ; invoke=( xx_eval )
+		action_cmd=() ; invoke=( xx eval )
 
 		action_env_vars+=( "${action_vars[@]}" )
 		action_vars=()
