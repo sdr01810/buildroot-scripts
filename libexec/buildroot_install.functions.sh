@@ -92,8 +92,10 @@ function buildroot_install_deps() {
 		bc
 		binutils
 		bison
+		bsdutils # for script(1)
 		build-essential
 		coreutils
+		cmake
 		fakechroot
 		fakeroot
 		flex
