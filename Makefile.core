@@ -87,7 +87,7 @@ distribution_candidates_computed_once := $(distribution_candidates)
 distribution_staging_dir := $(strip \
 	$(build_output_staging_dir)/$(distribution_archive_file_stem) \
 )
-distribution_staging_dir_umask ?= 0022
+distribution_staging_dir_umask ?= 022
 
 
 ##
@@ -101,7 +101,7 @@ installation_dir := $(strip \
 installation_dir_unversioned := $(strip \
 	$(patsubst %-$(package_version),%,$(installation_dir)) \
 )
-installation_dir_umask ?= 0022
+installation_dir_umask ?= 022
 
 
 ##
@@ -147,7 +147,7 @@ clean ::
 	:
 	rm -rf "$(distribution_candidates_as_file)"
 
-$(distribution_candidates_as_file) : $(dir $(distribution_candidates_as_file))
+$(distribution_candidates_as_file) : $(dir $(distribution_candidates_as_file)).ts.made
 $(distribution_candidates_as_file) : $(distribution_candidates_computed_once) $(force)
 	:
 	ls -d $(distribution_candidates_computed_once) | \
@@ -191,12 +191,15 @@ $(distribution_staging_dir)/.ts.made : $(distribution_candidates_computed_once)
 	(cat "$(distribution_candidates_as_file)" | cpio -pdmuv "$(patsubst %/,%,$(dir $@))")
 	:
 	umask $(distribution_staging_dir_umask) && \
-	for x1 in "$(dir $@)bin"/*.sh ; do \
+	for d1 in "$(dir $@)"bin \
+	          "$(dir $@)"bin/thunk ; do \
+	for x1 in "$${d1:?}"/*.js "$${d1:?}"/*.sh "$${d1:?}"/*.pl \
+	          "$${d1:?}"/*.py "$${d1:?}"/*.tcl "$${d1:?}"/*.tk ; do \
 		[ -e "$${x1:?}" ] || continue ; \
 		x1_target="$$(basename "$${x1:?}")" ; \
-		case "$${x1:?}" in */*.prolog.sh) continue ;; esac ; \
-		(set -x ; ln -snf "$${x1_target:?}" "$${x1%.sh}") ; \
-	done
+		case "$${x1:?}" in */*.prolog.*) continue ;; esac ; \
+		(set -x ; ln -snf "$${x1_target:?}" "$${x1%.*}") ; \
+	done;done
 	@touch "$@"
 
 ##
@@ -223,6 +226,11 @@ $(distribution_archive_file_tar_gz) : $(distribution_staging_dir)/.ts.made $(for
 ##
 
 targets_phony += install install.undo
+
+install.undo ::
+	:
+	rm -f "/etc/paths.d/$(package_name)"
+	rm -f "/etc/profile.d/$(package_name).sh"
 
 ifeq ($(notdir $(installation_dir)),$(package_name)-$(package_version))
 install.undo ::
@@ -253,6 +261,7 @@ endif
 ifneq ($(installation_dir_unversioned),$(installation_dir)) 
 $(installation_dir_unversioned)/.ts.installed : $(installation_dir)/.ts.installed
 	:
+	umask $(installation_dir_umask) && \
 	ln -snf "$(notdir $(installation_dir))" "$(installation_dir_unversioned)"
 endif
 
@@ -260,6 +269,19 @@ $(installation_dir)/.ts.installed : $(distribution_staging_dir)/.ts.made $(force
 	:
 	umask $(installation_dir_umask) && \
 	rsync -a --delete --exclude='.ts.*' "$(dir $<)" "$(dir $@)"
+	:
+	umask $(installation_dir_umask) && \
+	for x1 in "$(dir $@)etc"/*/*.in ; do \
+		[ -e "$${x1:?}" ] || continue ; \
+		(set -x ; sed -e 's#@package_installation_dir_unversioned@#$(patsubst %/,%,$(installation_dir_unversioned))#g' "$${x1:?}" > "$${x1%.in}") ; \
+	done
+	:
+	umask $(installation_dir_umask) && \
+	if [ -d /etc/paths.d ] ; then \
+		(set -x ; cp "$(dir $@)etc/paths.d/$(package_name)" "/etc/paths.d/.") ; \
+	elif [ -d /etc/profile.d ] ; then \
+		(set -x ; cp "$(dir $@)etc/profile.d/$(package_name)".*.sh "/etc/profile.d/.") ; \
+	fi
 	@touch "$@"
 
 ##
