@@ -130,21 +130,21 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -rf buildroot
 
 		expect_xc 0 buildroot.sh install --everything || return $?
-		expect_xc 0 test -d buildroot -a -n "$(which debootstrap)" || return $?
+		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)" || return $?
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
 		expect_xc 0 buildroot.sh install --dependencies-only || return $?
-		expect_xc 0 test ! -d buildroot -a -n "$(which debootstrap)" || return $?
+		expect_xc 0 test ! -d buildroot -a -n "$(sudo which debootstrap)" || return $?
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
 		expect_xc 0 buildroot.sh install 
-		expect_xc 0 test -d buildroot -a -n "$(which debootstrap)" || return $?
+		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)" || return $?
 		;;
 
 	2) # xctc build
