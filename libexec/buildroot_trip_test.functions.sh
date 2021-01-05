@@ -288,6 +288,14 @@ function buildroot_trip_test_run_1() { # [state]
 	4) # main build
 
 		xx :
+		xx rm -f buildroot-output-main/images/rootfs.cpio
+
+		xx :
+		xx rm -rf buildroot-dl-ptb/toolchain-external-custom
+
+		expect_xc 0 buildroot.sh toolchain{,-external{,-custom}}-dirclean || return $?
+
+		xx :
 		xx mv -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz{,.ASIDE}
 
 		expect_xc 0 buildroot.sh my_team_product_x86_64_main_defconfig || return $?
