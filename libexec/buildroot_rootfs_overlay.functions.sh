@@ -155,6 +155,7 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	xx sudo qemu-debootstrap \
 		--verbose \
+		--merged-usr \
 		--log-extra-deps \
 		--keep-debootstrap-dir \
 		--arch="${arch:?}" \
