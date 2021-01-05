@@ -3,12 +3,6 @@
 ## See Makefile.core for usage guidelines.
 ##
 
-distribution_candidate_top_files_and_dirs_glob := $(strip \
-	*.md *.txt $(wildcard bin etc lib libexec share) \
-)
-
-##
-
 include Makefile.core
 
 ##
@@ -31,10 +25,10 @@ br2_external_tree_sample_source_candidates_computed_once := $(strip \
 
 ##
 
-stage :: $(br2_external_tree_sample_staging_dir)/.ts.made
+stage :: $(br2_external_tree_sample_staging_dir)/.ts.completed
 
-$(br2_external_tree_sample_staging_dir)/.ts.made : $(distribution_staging_dir)/.ts.made
-$(br2_external_tree_sample_staging_dir)/.ts.made : $(br2_external_tree_sample_source_candidates_computed_once) $(force)
+$(br2_external_tree_sample_staging_dir)/.ts.completed : $(distribution_staging_dir)/.ts.completed
+$(br2_external_tree_sample_staging_dir)/.ts.completed : $(br2_external_tree_sample_source_candidates_computed_once) $(force)
 	@umask $(distribution_staging_dir_umask) && \
 	mkdir -p "$(dir $@)"
 	:
