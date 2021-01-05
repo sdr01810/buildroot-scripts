@@ -71,18 +71,27 @@ function buildroot_install_core() {
 	local buildroot_final_dbn="${buildroot_artifact_dbn%-${buildroot_version:?}}"
 	local x1
 
-	if [ ! -d "${buildroot_final_dbn:?}" ] ; then
+	if [ -e "${buildroot_final_dbn:?}" -a ! -L "${buildroot_final_dbn:?}" ] ; then
+
+		xx rm -rf "${buildroot_final_dbn:?}"
+	fi
+
+	if ! [ -d "${buildroot_artifact_dbn:?}" ] ; then
+
 		if [ ! -s "${buildroot_artifact_fbn:?}" ] ; then
+
 			xx wget -q -O "${buildroot_artifact_fbn:?}" "${buildroot_artifact_url:?}"
 			xx echo "${buildroot_artifact_sha1:?} *${buildroot_artifact_fbn:?}" | xx sha1sum --check 
 		fi
 
-		if [ -e "${buildroot_artifact_dbn:?}" ] ; then
-			xx rm -rf "${buildroot_artifact_dbn:?}"
-		fi
-
 		xx tar xzf "${buildroot_artifact_fbn:?}"
-		xx mv "${buildroot_artifact_dbn:?}" "${buildroot_final_dbn:?}"
+
+		rm -f "${buildroot_final_dbn:?}" # force symlink creation below
+	fi
+
+	if ! [ "${buildroot_artifact_dbn:?}" = "$(readlink "${buildroot_final_dbn:?}" 2>&- || :)" ] ; then
+
+		xx ln -snf "${buildroot_artifact_dbn:?}" "${buildroot_final_dbn:?}"
 	fi
 }
 
