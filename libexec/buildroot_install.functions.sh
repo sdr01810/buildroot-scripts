@@ -93,6 +93,22 @@ function buildroot_install_core() {
 
 		xx ln -snf "${buildroot_artifact_dbn:?}" "${buildroot_final_dbn:?}"
 	fi
+
+	for x2 in buildroot.env.sample ; do
+	for x1 in "${this_script_pkg_root:?}/share/samples/${x2%.sample}" ; do
+
+		if [ -e "${x2%.sample}" ] ; then
+
+			true # user doesn't need a sample
+		else
+		if [ -e "${x2:?}" ] && cmp --silent "${x1:?}" "${x2:?}" 2>&- ; then
+
+			true # an up-to-date sample is already in place
+		else
+			xx cp "${x1:?}" "${x2:?}"
+		fi;fi
+	done
+	done
 }
 
 function buildroot_install_deps() {
