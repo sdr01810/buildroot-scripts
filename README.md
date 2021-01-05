@@ -1,1 +1,1 @@
-Scripts built around buildroot which help to leverage its capabilities.
+Scripts built around buildroot that help to leverage its capabilities.
