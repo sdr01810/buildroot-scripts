@@ -141,7 +141,6 @@ function buildroot_install_deps() {
 		bc
 		bison
 		bzip2
-		chroot
 		cpio
 		fakechroot
 		fakeroot
