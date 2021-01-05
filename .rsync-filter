@@ -8,6 +8,7 @@
 - build-output
 
 - buildroot
+- buildroot-[0-9]*
 - buildroot-dl
 - buildroot-dl-*
 - buildroot-output

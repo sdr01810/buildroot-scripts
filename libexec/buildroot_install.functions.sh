@@ -17,10 +17,10 @@ source install_package.functions.sh
 buildroot_artifact_signer_gpg_key_url= # TODO
 buildroot_artifact_signer_gpg_key_fingerprint= # TODO
 
-buildroot_version=2020.08 
+buildroot_version=2020.11.1
 buildroot_download_url="https://buildroot.org/downloads"
 buildroot_artifact_url="${buildroot_download_url:?}/buildroot-${buildroot_version:?}.tar.gz"
-buildroot_artifact_sha1=2cbe3f7a807f62793421568b5320dd0232b82c53 # version-specific
+buildroot_artifact_sha1=dc29871b7bd76761db997a7282b9ccbcc78dfcd9 # version-specific
 
 ##
 
