@@ -259,13 +259,15 @@ $(distribution_staging_dir)/.ts.completed : $(distribution_candidates)
 	umask $(distribution_staging_dir_umask) && \
 	for d1 in "$(dir $@)"bin \
 	          "$(dir $@)"bin/thunk ; do \
-	for x1 in "$${d1:?}"/*.js "$${d1:?}"/*.sh "$${d1:?}"/*.pl \
+	for x1 in "$${d1:?}"/*.js "$${d1:?}"/*.*sh "$${d1:?}"/*.pl \
 	          "$${d1:?}"/*.py "$${d1:?}"/*.tcl "$${d1:?}"/*.tk ; do \
 		[ -e "$${x1:?}" ] || continue ; \
 		x1_target="$$(basename "$${x1:?}")" ; \
 		case "$${x1:?}" in */*.prolog.*) continue ;; esac ; \
 		(set -x ; ln -snf "$${x1_target:?}" "$${x1%.*}") ; \
 	done;done
+	:
+	chmod -R a+rX "$(dir $@)"
 	@:
 	@touch "$@"
 
