@@ -66,7 +66,7 @@ function buildroot_qemu_vm_run() { # [--using-boot-disk|--using-initrd]
 	--using-boot-disk)
 		for x1 in "${BR2_ENV_OUTPUT_DIR:?}"/images/boot-disk.img ; do
 
-			qemu_system_opts+=( -hda "${x1:?}" -bios /usr/share/qemu/OVMF.fd )
+			qemu_system_opts+=( -bios /usr/share/qemu/OVMF.fd -drive index=0,format=raw,file="${x1:?}" )
 		done
 		;;
 	--using-initrd)
