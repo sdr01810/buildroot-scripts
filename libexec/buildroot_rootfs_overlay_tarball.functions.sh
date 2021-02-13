@@ -28,7 +28,10 @@ function create_buildroot_rootfs_overlay_tarball() { # tarball_fpn rootfs_overla
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--no-selinux"
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--no-xattrs"
 
-	local create_tarball="sudo tar cf" # must use sudo to ensure full access to rootfs overlay contents
+	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--sparse"
+
+	local create_tarball="sudo tar cf" # must use sudo(8) to ensure full access to rootfs overlay contents
+	#^-- FIXME: probe for fakeroot context, and use sudo(8) unless in fakeroot context
 
 	eval "xx ${create_tarball:?} ${tarball_fpn_quoted:?} ${tar_opts_ws_delimited_quoted} ${rootfs_overlay_dpn_quoted:?}"
 }
