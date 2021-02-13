@@ -232,6 +232,8 @@ function buildroot_dispatcher() { # ...
 	xctc)
 		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:?}"
 
+		! [[ ${action:?} == make ]] ||
+
 		case "x ${action_args[@]} x" in
 		*" all "*|*" toolchain "*|x"  "x)
 			case "x ${action_args[@]} x" in
@@ -328,14 +330,49 @@ function buildroot_dispatcher() { # ...
 
 		"${invoke[@]}" "${action_env_vars[@]}" "${action_cmd[@]}" "${action_vars[@]}" "${action_args[@]}"
 
-		case "${output_selector:?}" in
-		xctc)
-			for x1 in "${BR2_ENV_OUTPUT_DIR:?}"/images ; do
-			for x2 in "${BR2_ENV_DL_DIR:?}/buildroot-xctc" ; do
-				! [ -e "${x1:?}" ] || xx rsync -a -u -i "${x1:?}"/ "${x2:?}"/
-			done;done
-			;;
-		esac
+		if [[ "${output_selector:?}" == xctc && ${action:?} == make ]] ; then
+
+			case "x ${action_args[@]} x" in
+			*" clean "*|*" distclean "*|*" toolchain-external"*"clean "*)
+				for x1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
+				for x2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc/* ; do
+
+					[[ -e ${x1:?} && -e ${x2:?} ]] || continue
+
+					xx rm -rf "${x1:?}/${x2##*/buildroot-xctc/}"
+				done;done
+				#^-- forces a non-xctc build that uses the xctc sdk to 'download' a fresh copy
+
+				for x1 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
+
+					[[ -e ${x1:?} ]] || continue
+
+					xx rm -rf "${x1:?}"
+				done
+				;;
+
+			*" sdk "*)
+				for x1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
+				for x2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc/* ; do
+
+					[[ -e ${x1:?} && -e ${x2:?} ]] || continue
+
+					xx rm -rf "${x1:?}/${x2##*/buildroot-xctc/}"
+				done;done
+				#^-- forces a non-xctc build that uses the xctc sdk to 'download' a fresh copy
+
+				for x1 in "${BR2_ENV_OUTPUT_DIR:?}"/images/*_sdk* ; do
+				for x2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
+
+					[[ -e ${x1:?} ]] || continue
+
+					[[ -e ${x2:?} ]] || xx mkdir -p "${x2:?}"
+
+					xx rsync -a -i -c "${x1:?}" "${x2:?}/${x1##*/images/}"
+				done;done
+				;;
+			esac
+		fi
 	)
 }
 
