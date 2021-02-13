@@ -48,9 +48,14 @@ function extract_from_buildroot_rootfs_overlay_tarball() { # tarball_fpn
 
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--same-owner"
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--same-permissions"
+
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--strip-components=1"
 
-	local extract_from_tarball="tar xf" # must not use sudo so we can run within a fakeroot context
+	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--keep-directory-symlink"
+	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--delay-directory-restore"
+
+	local extract_from_tarball="tar xf" # must not use sudo(8) so we can run within a fakeroot context
+	#^-- FIXME: probe for fakeroot context, and use sudo(8) unless in fakeroot context
 
 	case "${f1:?}" in
 	*.tar.bz2|*.tbz)
