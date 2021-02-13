@@ -228,6 +228,22 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	##
 
+	xx :
+
+	xx rm -f "${BR2_OUTPUT_ROL_DIR:?}"/etc/.*.lock
+
+	#^-- remove etc/ lock files (cf. vipw(8) and friends)
+
+	##
+
+	xx :
+
+	xx rm -f "${BR2_OUTPUT_ROL_DIR:?}"/root/.*history
+
+	#^-- remove interactive history files for user root
+
+	##
+
 	local d1 b1
 
 	for d1 in "$(dirname "${BR2_OUTPUT_ROL_DIR:?}")" ; do
