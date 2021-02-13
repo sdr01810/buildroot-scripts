@@ -1,6 +1,6 @@
 ##/bin/bash
 ## Provides function buildroot_rootfs_overlay() and friends.
-## 
+##
 
 [ -z "$buildroot_rootfs_overlay_functions_p" ] || return 0
 
@@ -29,7 +29,8 @@ function buildroot_rootfs_overlay() { # ...
 	local action=
 	local action_args=()
 
-	local clean_first_p=
+	local clean_all_p=
+	local clean_tarball_p=
 
 	while [ $# -gt 0 ] ; do
         case "${1}" in
@@ -43,13 +44,31 @@ function buildroot_rootfs_overlay() { # ...
 		action="${action:-clean}"
 		[ "${action:?}" = "clean" ]
 
+		clean_all_p=t
+
+		shift 1
+		;;
+	--clean-tarball-only)
+		action="${action:-clean}"
+		[ "${action:?}" = "clean" ]
+
+		clean_tarball_p=t
+
 		shift 1
 		;;
 	--clean-first)
 		action="${action:-build}"
 		[ "${action:?}" = "build" ]
 
-		clean_first_p=t
+		clean_all_p=t
+
+		shift 1
+		;;
+	--clean-tarball-first)
+		action="${action:-build}"
+		[ "${action:?}" = "build" ]
+
+		clean_tarball_p=t
 
 		shift 1
 		;;
@@ -89,12 +108,19 @@ function buildroot_rootfs_overlay() { # ...
 
 	load_buildroot_config
 
-        if [ -n "${clean_first_p}" ] ; then
+        if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_rootfs_overlay_clean
-	fi
+	else
+	if [[ -n ${clean_tarball_p} ]] ; then
 
-	"xx_buildroot_rootfs_overlay_${action:?}" "${action_args[@]}"
+		xx_buildroot_rootfs_overlay_clean --tarball-only
+	fi;fi
+
+	if [[ ${action:?} != clean ]] ; then
+
+		"xx_buildroot_rootfs_overlay_${action:?}" "${action_args[@]}"
+	fi
 }
 
 function buildroot_rootfs_overlay_build() { # [--download-only]
@@ -108,21 +134,13 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 		;;
 	*|'')
 		echo 1>&2 "${FUNCNAME:?}: unsupported rootfs overlay creation tool: ${BR2_ROOTFS_OVERLAY_CREATION_TOOL:?}"
-		return 1
+		return 2
 		;;
 	esac
 
 	if [ -z "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH}" ] ; then
 
 		echo 1>&2 "${this_script_fbn:?}: rootfs overlay creation using debootstrap is not configured; skipping"
-
-		return 0
-	fi
-
-	if [ -e "${BR2_OUTPUT_ROL_DIR:?}.tar" ] ; then
-
-		echo 1>&2 "${this_script_fbn:?}: nothing to do" #<-- minimize build time
-
 		return 0
 	fi
 
@@ -150,30 +168,43 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	local variant="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT}"
 	case "${variant}" in standard) variant="" ;; esac
 
-	xx sudo mkdir -p "${BR2_DL_ROL_DIR:?}"
-	xx sudo mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
+	local did_just_create_output_directory_p=
 
-	xx sudo qemu-debootstrap \
-		--verbose \
-		--merged-usr \
-		--log-extra-deps \
-		--keep-debootstrap-dir \
-		--arch="${arch:?}" \
-		${variant:+--variant="${variant:?}"} \
-		${package_inclusion_list_comma_separated:+--include="${package_inclusion_list_comma_separated:?}"} \
-		${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"} \
-		--cache-dir="${BR2_DL_ROL_DIR:?}" \
-		"${action_args[@]}" "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+	if ! [[ -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
 
-	#^-- NB: the rootfs overlay has files and directories that are not accessible to a non-root user
+		xx sudo mkdir -p "${BR2_DL_ROL_DIR:?}"
+		xx sudo mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
 
-	#^-- NB: the rootfs overlay has files (programs) that are setuid root
+		xx sudo qemu-debootstrap \
+			--verbose \
+			--merged-usr \
+			--log-extra-deps \
+			--keep-debootstrap-dir \
+			--arch="${arch:?}" \
+			${variant:+--variant="${variant:?}"} \
+			${package_inclusion_list_comma_separated:+--include="${package_inclusion_list_comma_separated:?}"} \
+			${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"} \
+			--cache-dir="${BR2_DL_ROL_DIR:?}" \
+			"${action_args[@]}" "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+
+		#^-- NB: the rootfs overlay has files and directories that are not accessible to a non-root user
+
+		#^-- NB: the rootfs overlay has files (programs) that are setuid root
+
+		did_just_create_output_directory_p=t
+	fi
 
 	case ": ${action_args[@]} :" in
-	*" --download-only "*) return $? ;;
+	*" --download-only "*)
+
+		return $?
+		;;
 	esac
 
-	## 
+	if [[ -e ${BR2_OUTPUT_ROL_DIR:?}.tar && ! -n ${did_just_create_output_directory_p} ]] ; then
+
+		return 0
+	fi
 
 	xx :
 
@@ -213,7 +244,7 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	assert_that [ -e "${BR2_OUTPUT_ROL_DIR:?}.tar" ] || return $?
 }
 
-function buildroot_rootfs_overlay_clean() { #
+function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 	local d1 x1
 
@@ -223,7 +254,14 @@ function buildroot_rootfs_overlay_clean() { #
 
 		xx sudo rm -rf "${x1:?}"
 	done
- 
+
+	case ": ${@} :" in
+	*" --tarball-only "*)
+
+		return $?
+		;;
+	esac
+
 	for d1 in "${BR2_OUTPUT_ROL_DIR:?}" ; do
 
 		[ -e "${d1:?}" ] || continue
@@ -231,7 +269,7 @@ function buildroot_rootfs_overlay_clean() { #
 		xx sudo umount "${d1:?}"/sys  || :
 		xx sudo umount "${d1:?}"/proc || :
 
-		sudo find -H "${d1:?}" -mindepth 1 -maxdepth 1 | 
+		sudo find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
 		while read -r x1 ; do xx sudo rm -rf "${x1:?}" ; done
 	done
 }

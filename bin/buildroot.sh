@@ -79,6 +79,8 @@
 ##     buildroot.sh rootfs-overlay --build
 ##     buildroot.sh rootfs-overlay --clean-only
 ##     buildroot.sh rootfs-overlay --clean-first
+##     buildroot.sh rootfs-overlay --clean-tarball-only
+##     buildroot.sh rootfs-overlay --clean-tarball-first
 ##     buildroot.sh rootfs-overlay --download-only
 ##     
 ##     buildroot.all-output-trees.sh my_team_product_{xctc,main}_defconfig
