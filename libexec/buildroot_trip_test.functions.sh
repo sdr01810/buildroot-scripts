@@ -24,7 +24,7 @@ function buildroot_trip_test() { # ...
 
 	local action=
 	local action_args=()
-	local clean_first_p=
+	local clean_all_p=
 
 	while [ $# -gt 0 ] ; do
         case "${1}" in
@@ -38,13 +38,15 @@ function buildroot_trip_test() { # ...
 		action="${action:-clean}"
 		[ "${action:?}" = "clean" ]
 
+		clean_all_p=t
+
 		shift 1
 		;;
 	--clean-first)
 		action="${action:-run}"
 		[ "${action:?}" = "run" ]
 
-		clean_first_p=t
+		clean_all_p=t
 
 		shift 1
 		;;
@@ -68,12 +70,15 @@ function buildroot_trip_test() { # ...
 
 	unset_buildroot_config
 
-        if [ -n "${clean_first_p}" ] ; then
+        if [[ -n ${clean_all_p} ] ; then
 
 		xx_buildroot_trip_test_clean
 	fi
 
-	"xx_buildroot_trip_test_${action:-run}" "${action_args[@]}"
+	if [[ ${action:?} != clean ]] ; then
+
+		"xx_buildroot_trip_test_${action:-run}" "${action_args[@]}"
+	fi
 }
 
 function buildroot_trip_test_run() { # [starting_state]
