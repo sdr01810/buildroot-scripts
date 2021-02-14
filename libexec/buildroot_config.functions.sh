@@ -266,6 +266,8 @@ function overlay_buildroot_br2_env_vars_onto_br2_vars() {
 
 	for br2_env_variable_name in "${br2_env_variable_names[@]}" ; do
 
+		[[ -n ${!br2_env_variable_name} ]] || continue
+
 		local br2_variable_name="${br2_env_variable_name/_ENV_/_}"	
 
 		eval "${br2_variable_name:?}=$(printf %q "${!br2_env_variable_name}")"
