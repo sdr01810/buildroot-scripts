@@ -53,7 +53,7 @@ function buildroot_all_output_trees() { # ...
 
 	local action=
 	local action_args=()
-	local clean_first_p=
+	local clean_all_p=
 
 	while [ $# -gt 0 ] ; do
         case "${1}" in
@@ -67,13 +67,15 @@ function buildroot_all_output_trees() { # ...
 		action="${action:-clean}"
 		[ "${action:?}" = "clean" ]
 
+		clean_all_p=t
+
 		shift 1
 		;;
 	--clean-first)
 		action="${action:-build}"
 		[ "${action:?}" = "build" ]
 
-		clean_first_p=t
+		clean_all_p=t
 
 		shift 1
 		;;
@@ -99,12 +101,15 @@ function buildroot_all_output_trees() { # ...
 
 	load_buildroot_config
 
-        if [ -n "${clean_first_p}" ] ; then
+        if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_all_output_trees_clean
 	fi
 
-	"xx_buildroot_all_output_trees_${action:?}" "${action_args[@]}"
+	if [[ ${action:?} != clean ]] ; then
+
+		"xx_buildroot_all_output_trees_${action:?}" "${action_args[@]}"
+	fi
 }
 
 function buildroot_all_output_trees_build() { # xctc_defconfig_fbn main_defconfig_fpn
