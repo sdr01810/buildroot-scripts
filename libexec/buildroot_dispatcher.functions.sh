@@ -185,7 +185,7 @@ function buildroot_dispatcher() { # ...
 		;;
 
 	*)
-		load_buildroot_config --env full
+		load_buildroot_config
 
 		: "${BR2_ENV_OUTPUT_MAIN_DIR:?missing value for BR2_ENV_OUTPUT_MAIN_DIR}"
 		: "${BR2_ENV_OUTPUT_XCTC_DIR:?missing value for BR2_ENV_OUTPUT_XCTC_DIR}"

@@ -100,6 +100,7 @@ function list_buildroot_config_variable_bindings() { # [ --env-filter { none | o
 	case "${1}" in
 	--env-filter)
 		env_filter_mode=${2:?missing value for env_filter_mode}
+
 		shift 2
 		;;
 	--)
@@ -146,15 +147,14 @@ function list_buildroot_config_variable_names_defined() { # [ --env-filter { non
 	list_buildroot_config_variable_bindings "$@" | sed -e 's/=.*//'
 }
 
-function load_buildroot_config() { # [ --env { defaults | full } ] [ --output-xctc | --output-main ]
+function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-only } [ --output-xctc | --output-main ]
 
-	local env_mode=defaults
-	local output_selector=
+	local defaults_mode=file-too output_selector=
 
         while [ $# -gt 0 ] ; do
 	case "${1}" in
-	--env)
-		env_mode=${2:?missing value for env_mode}
+	--defaults)
+		defaults_mode=${2:?missing value for defaults_mode}
 
 		shift 2
 		;;
@@ -175,7 +175,7 @@ function load_buildroot_config() { # [ --env { defaults | full } ] [ --output-xc
 		;;
 	esac;done
 
-	load_buildroot_config_defaults --env "${env_mode:?}"
+	load_buildroot_config_defaults --"${defaults_mode:?}"
 
 	if ! eval $(cat_buildroot_config_quoted ${output_selector:+--output-${output_selector}}) ; then
 
@@ -193,15 +193,15 @@ function load_buildroot_config() { # [ --env { defaults | full } ] [ --output-xc
 	fi
 }
 
-function load_buildroot_config_defaults() { # [ --env { defaults | full } ]
+function load_buildroot_config_defaults() { # [ --file-too | --file-only | --file-omit ]
 
-	local env_mode=defaults
+	local defaults_mode=file-too
 
         while [ $# -gt 0 ] ; do
 	case "${1}" in
-	--env)
-		env_mode="${2:-${env_mode:?}}"
-		! [ $# -ge 2 ] || shift 1
+	--file-omit|--file-only|--file-too)
+		defaults_mode=${1#--}
+
 		shift 1
 		;;
 	--)
@@ -213,13 +213,20 @@ function load_buildroot_config_defaults() { # [ --env { defaults | full } ]
 		;;
 	esac;done
 
-	if [ "${env_mode:?}" = "full" ] ; then
-
-		load_buildroot_config_defaults_file
-	fi
-
-	local components_with_config_defaults=( core rootfs_overlay )
+	local components_with_config_defaults=()
 	local component
+
+	if [[ ${defaults_mode:?} != file-omit ]] ; then
+
+		components_with_config_defaults+=( customization_file )
+	fi
+	#^-- by design: load defaults from customization file *first*
+
+	if [[ ${defaults_mode:?} != file-only ]] ; then
+
+		components_with_config_defaults+=( core rootfs_overlay )
+	fi
+	#^-- by design: load defaults from built-in components *last*
 
 	for component in "${components_with_config_defaults[@]}" ; do
 
@@ -227,7 +234,7 @@ function load_buildroot_config_defaults() { # [ --env { defaults | full } ]
 	done
 }
 
-function load_buildroot_config_defaults_file() {
+function load_buildroot_config_defaults__customization_file() {
 
 	local f1="buildroot.env"
 
