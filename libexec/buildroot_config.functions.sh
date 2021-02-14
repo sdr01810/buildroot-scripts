@@ -190,20 +190,15 @@ function load_buildroot_config_defaults__core() {
 
 	export BR2_ENV_EXTERNAL="${BR2_ENV_EXTERNAL:-}"
 
-	if is_buildroot_dir ; then
+	##
 
-		export BR2_ENV_DL_PTB_DIR="${BR2_ENV_DL_PTB_DIR:-$(realpath "${PWD:?}-dl-ptb")}"
+	local prefix=buildroot ; ! is_buildroot_dir || prefix="${PWD:?}"
 
-		export BR2_ENV_OUTPUT_MAIN_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-$(realpath "${PWD:?}-output-main")}"
+	export BR2_ENV_DL_PTB_DIR="${BR2_ENV_DL_PTB_DIR:-$(realpath "${prefix:?}-dl-ptb")}"
 
-		export BR2_ENV_OUTPUT_XCTC_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-$(realpath "${PWD:?}-output-xctc")}"
-	else
-		export BR2_ENV_DL_PTB_DIR="${BR2_ENV_DL_PTB_DIR:-$(realpath "buildroot-dl-ptb")}"
+	export BR2_ENV_OUTPUT_MAIN_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-$(realpath "${prefix:?}-output-main")}"
 
-		export BR2_ENV_OUTPUT_MAIN_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-$(realpath "buildroot-output-main")}"
-
-		export BR2_ENV_OUTPUT_XCTC_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-$(realpath "buildroot-output-xctc")}"
-	fi
+	export BR2_ENV_OUTPUT_XCTC_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-$(realpath "${prefix:?}-output-xctc")}"
 
 	##
 
