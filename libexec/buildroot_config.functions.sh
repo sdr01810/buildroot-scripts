@@ -70,15 +70,20 @@ function cat_buildroot_config_quoted() {
 	fi
 }
 
-function list_buildroot_config_variable_names_defined() {
+function list_buildroot_config_variable_bindings() {
 
-	set | egrep '^(BR_|BR2_|HOST)\w+=' | sed -e 's/=.*//' |
+	set | egrep '^(BR_|BR2_|HOST)\w+=' |
 
-	egrep -v '^HOST(NAME|TYPE)$' | #<-- defined by bash, not buildroot
+	egrep -v '^HOST(NAME|TYPE)=' | #<-- defined by bash, not buildroot
 
 	sort
 
-	#^-- TODO: list variables defined by buildroot that do not match /^(BR_|BR2_|HOST)/
+	#^-- TODO: include variables defined by buildroot that do not match /^(BR_|BR2_|HOST)/
+}
+
+function list_buildroot_config_variable_names_defined() {
+
+	list_buildroot_config_variable_bindings | sed -e 's/=.*//'
 }
 
 function list_buildroot_config_env_variable_names_defined() {
