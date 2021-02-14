@@ -19,7 +19,7 @@ function buildroot_target_tree() { # ...
 
 	local action=
 	local action_args=()
-	local clean_first_p=
+	local clean_all_p=
 
 	while [ $# -gt 0 ] ; do
         case "${1}" in
@@ -33,13 +33,15 @@ function buildroot_target_tree() { # ...
 		action="${action:-clean}"
 		[ "${action:?}" = "clean" ]
 
+		clean_all_p=t
+
 		shift 1
 		;;
 	--clean-first)
 		action="${action:-build}"
 		[ "${action:?}" = "build" ]
 
-		clean_first_p=t
+		clean_all_p=t
 
 		shift 1
 		;;
@@ -65,12 +67,15 @@ function buildroot_target_tree() { # ...
 
 	load_buildroot_config
 
-        if [ -n "${clean_first_p}" ] ; then
+        if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_target_tree_clean
 	fi
 
-	"xx_buildroot_target_tree_${action:?}" "${action_args[@]}"
+	if [[ ${action:?} != clean ]] ; then
+
+		"xx_buildroot_target_tree_${action:?}" "${action_args[@]}"
+	fi
 }
 
 function buildroot_target_tree_build() { #
