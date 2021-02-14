@@ -19,34 +19,60 @@ source omit_wsac.functions.sh
 
 ##
 
-function cat_buildroot_config_quoted() {
+function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main ]
 
-	if [ -n "${BR2_ENV_OUTPUT_DIR}" ] ; then
+	local output_selector= output_dpn=${BR2_ENV_OUTPUT_DIR}
+
+        while [ $# -gt 0 ] ; do
+	case "${1}" in
+	--output-xctc|--output-main)
+		output_selector=${1#--output-}
+		eval output_dpn=\${BR2_ENV_OUTPUT_${output_selector^^?}_DIR}
+
+		shift 1
+		;;
+
+	--)
+		shift 1
+		;;
+
+	*|'')
+		echo 1>&2 "${FUNCNAME:?}: unrecognized argument(s): ${@}"
+		return 2
+		;;
+	esac;done
+
+	if ! [[ -n ${output_dpn} ]] ; then
+
+		# not enough context to locate buildroot config file
+		true
+	else
 	(
 		cd_buildroot
 
-		local BASE_DIR="${BR2_ENV_OUTPUT_DIR:?}" 
+		local BASE_DIR="${output_dpn:?}"
 
-		local BR2_BASE_DIR="${BR2_ENV_OUTPUT_DIR:?}" 
+		local BR2_BASE_DIR="${output_dpn:?}"
 
-		local BR2_CONFIG="${BR2_CONFIG:-${BR2_ENV_OUTPUT_DIR:?}/.config}"
+		local BR2_CONFIG="${BR2_CONFIG:-${output_dpn:?}/.config}"
 
-		local CONFIG_DIR="${BR2_ENV_OUTPUT_DIR:?}" 
+		local CONFIG_DIR="${output_dpn:?}"
 
-		local O="${BR2_ENV_OUTPUT_DIR:?}" 
+		local O="${output_dpn:?}"
 
 		local TOPDIR="${PWD:?}"
 
-		if ! [ -f "${BR2_CONFIG:?}" ] ; then
+		if ! [[ -e ${BR2_CONFIG:?} ]] ; then
 
 			# no buildroot config file at inferred location
 			true
 		else
 			eval local $(omit_wsac "${BR2_CONFIG:?}" | egrep '^BR2_(ARCH)=')
+			#^-- read expansion bootstrappers first
 
-			local ARCH="${BR2_ARCH:?}" 
+			local ARCH=${BR2_ARCH:?missing buildroot config value for BR2_ARCH}
 
-			local KERNEL_ARCH="$(as_buildroot_kernel_arch "${BR2_ARCH:?}")"
+			local KERNEL_ARCH=$(as_buildroot_kernel_arch "${BR2_ARCH:?}")
 
 			omit_wsac "${BR2_CONFIG:?}" | sed \
 				\
@@ -62,11 +88,7 @@ function cat_buildroot_config_quoted() {
 				-e 's#\$#\\$#g' -e 's#(#{#g' -e 's#)#}#g' \
 				;
 		fi
-
 	)
-	else
-		# not enough context to locate buildroot config
-		true
 	fi
 }
 
@@ -124,29 +146,38 @@ function list_buildroot_config_variable_names_defined() { # [ --env-filter { non
 	list_buildroot_config_variable_bindings "$@" | sed -e 's/=.*//'
 }
 
-function load_buildroot_config() { # [--env {defaults|full}]
+function load_buildroot_config() { # [ --env { defaults | full } ] [ --output-xctc | --output-main ]
 
 	local env_mode=defaults
+	local output_selector=
 
         while [ $# -gt 0 ] ; do
 	case "${1}" in
 	--env)
-		env_mode="${2:-${env_mode:?}}"
-		! [ $# -ge 2 ] || shift 1
+		env_mode=${2:?missing value for env_mode}
+
+		shift 2
+		;;
+
+	--output-xctc|--output-main)
+		output_selector=${1#--output-}
+
 		shift 1
 		;;
+
 	--)
 		shift 1
 		;;
+
 	*|'')
-		echo 1>&2 "${FUNCNAME:?}: unrecognized argument; ignoring."
-		shift 1
+		echo 1>&2 "${FUNCNAME:?}: unrecognized argument(s): ${@}"
+		return 2
 		;;
 	esac;done
 
 	load_buildroot_config_defaults --env "${env_mode:?}"
 
-	if ! eval $(cat_buildroot_config_quoted) ; then
+	if ! eval $(cat_buildroot_config_quoted ${output_selector:+--output-${output_selector}}) ; then
 
 		echo 1>&2 "${FUNCNAME:?}: unable to parse buildroot config file"
 		return 2
@@ -162,7 +193,7 @@ function load_buildroot_config() { # [--env {defaults|full}]
 	fi
 }
 
-function load_buildroot_config_defaults() { # [--env {defaults|full}]
+function load_buildroot_config_defaults() { # [ --env { defaults | full } ]
 
 	local env_mode=defaults
 
@@ -300,7 +331,7 @@ function overlay_buildroot_br2_env_vars_onto_br2_vars() {
 
 		[[ -n ${!br2_env_variable_name} ]] || continue
 
-		local br2_variable_name="${br2_env_variable_name/_ENV_/_}"	
+		local br2_variable_name="${br2_env_variable_name/_ENV_/_}"
 
 		eval "${br2_variable_name:?}=$(printf %q "${!br2_env_variable_name}")"
 	done
