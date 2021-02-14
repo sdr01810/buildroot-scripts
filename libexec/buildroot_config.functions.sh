@@ -13,8 +13,6 @@ buildroot_config_debug_p=
 source buildroot_cwd.functions.sh
 source buildroot_kernel_arch.functions.sh
 
-source debian_arch.functions.sh
-
 source omit_wsac.functions.sh
 
 ##
@@ -298,10 +296,9 @@ function load_buildroot_config__defaults__rootfs_overlay() {
 
 	##
 
-	BR2_ROOTFS_OVERLAY_CREATION_TOOL="${BR2_ROOTFS_OVERLAY_CREATION_TOOL:-debootstrap}"
+	BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED:-n}"
 
-	! [ -n "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH}" ] ||
-	BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH="$(xx : && xx as_debian_arch "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?}")"
+	BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:-}"
 
 	BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_FILE_LIST="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_FILE_LIST:-}"
 
@@ -321,6 +318,12 @@ function load_buildroot_config__defaults__rootfs_overlay() {
 
 	BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT:-}"
 	#^-- "" == standard packages: all packages marked required and/or important
+
+	##
+
+	BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_IS_ENABLED="${BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_IS_ENABLED:-n}"
+
+	BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_TARBALL_LIST="${BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_TARBALL_LIST:-}"
 
 	##
 

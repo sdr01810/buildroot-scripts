@@ -4,12 +4,16 @@ config BR2_ROOTFS_OVERLAY_TAR_EXCLUSION_OPTS
 	string
 	default "--exclude=.empty --exclude='*~' --exclude-vcs"
 
-# visible: 
+# visible:
 
-menu "Rootfs overlay applied post-fakeroot"
+menu "Applying rootfs overlay(s) during post-fakeroot phase"
 
-config BR2_ROOTFS_OVERLAY_POST_FAKEROOT_TARBALL_LIST
-	string "Root filesystem overlay tarballs"
+config BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_IS_ENABLED
+	bool "Apply rootfs overlay(s) during post-fakeroot phase"
+	default false
+
+config BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_TARBALL_LIST
+	string "Overlay tarball(s)"
 	default ""
 	help
 	  Specify a list of tarballs that are extracted onto the target
@@ -33,6 +37,10 @@ config BR2_ROOTFS_OVERLAY_POST_FAKEROOT_TARBALL_LIST
 endmenu
 
 menu "Rootfs overlay creation using debootstrap(8)"
+
+config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED
+	bool "Create rootfs overlay using debootstrap(8)"
+	default false
 
 config BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH
 	string

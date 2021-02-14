@@ -14,6 +14,8 @@ source assert.functions.sh
 
 source as_list_with_separator.functions.sh
 
+source debian_arch.functions.sh
+
 source ensure_backup_of_original_file.functions.sh
 
 source list_mount_points_below.functions.sh
@@ -128,19 +130,8 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	local action_args=( "$@" )
 	shift $#
 
-        case "${BR2_ROOTFS_OVERLAY_CREATION_TOOL:?}" in
-	debootstrap)
-		true
-		;;
-	*|'')
-		echo 1>&2 "${FUNCNAME:?}: unsupported rootfs overlay creation tool: ${BR2_ROOTFS_OVERLAY_CREATION_TOOL:?}"
-		return 2
-		;;
-	esac
+	if [[ ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED:?} == n ]] ; then
 
-	if [ -z "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH}" ] ; then
-
-		echo 1>&2 "${this_script_fbn:?}: rootfs overlay creation using debootstrap is not configured; skipping"
 		return 0
 	fi
 
@@ -298,14 +289,18 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 function buildroot_rootfs_overlay_run_hook_post_fakeroot() { # [target_rootfs_dpn]
 
-	local target_rootfs_dpn="${1:-${TARGET_DIR:?}}" ; ! [ $# -ge 1 ] || shift 1
+	local target_rootfs_dpn=${1:-${TARGET_DIR:?}} ; ! [[ ${#} -ge 1 ]] || shift 1
 
 	local rc_did_apply_overlay_and_failed=2
 	local rc_did_apply_overlay_and_succeeded=0
 	local rc_did_not_apply_overlay_not_configured=1
 	local rc
 
-	if [ -z "${BR2_ROOTFS_OVERLAY_POST_FAKEROOT_TARBALL_LIST}" ] ; then
+	if [[ ${BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_IS_ENABLED:?} == n ]] ; then
+
+		rc=${rc_did_not_apply_overlay_not_configured:?}
+	else
+	if ! [[ -n ${BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_TARBALL_LIST} ]] ; then
 
 		rc=${rc_did_not_apply_overlay_not_configured:?}
 	else
@@ -324,9 +319,9 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot() { # [target_rootfs_dp
 		rc=${rc_did_apply_overlay_and_succeeded:?} ||
 
 		rc=${rc_did_apply_overlay_and_failed:?}
-	fi
+	fi;fi
 
-	if [ -n "${buildroot_rootfs_overlay_debug_p}" ] ; then
+	if [[ -n ${buildroot_rootfs_overlay_debug_p} ]] ; then
 
 		xx : "${FUNCNAME:?}: rc = ${rc:?}"
 	fi
@@ -336,7 +331,7 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot() { # [target_rootfs_dp
 
 function buildroot_rootfs_overlay_run_hook_post_fakeroot__extract_overlay() {
 
-	local tarball_list_ws_delimited="${BR2_ROOTFS_OVERLAY_POST_FAKEROOT_TARBALL_LIST:?}"
+	local tarball_list_ws_delimited="${BR2_ROOTFS_OVERLAY_DURING_POST_FAKEROOT_TARBALL_LIST:?}"
 	local tar_rc f1 x1
 
 	for f1 in ${tarball_list_ws_delimited:?} ; do
