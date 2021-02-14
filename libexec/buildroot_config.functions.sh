@@ -144,7 +144,7 @@ function load_buildroot_config() { # [--env {defaults|full}]
 		;;
 	esac;done
 
-	load_buildroot_config_defaults "${env_mode:?}"
+	load_buildroot_config_defaults --env "${env_mode:?}"
 
 	if ! eval $(cat_buildroot_config_quoted) ; then
 
@@ -162,21 +162,25 @@ function load_buildroot_config() { # [--env {defaults|full}]
 	fi
 }
 
-function load_buildroot_config_defaults() { # [defaults|full]
+function load_buildroot_config_defaults() { # [--env {defaults|full}]
 
-	local env_mode=
+	local env_mode=defaults
 
+        while [ $# -gt 0 ] ; do
 	case "${1}" in
-	defaults|full)
-		env_mode="${1:?}"
+	--env)
+		env_mode="${2:-${env_mode:?}}"
+		! [ $# -ge 2 ] || shift 1
+		shift 1
+		;;
+	--)
 		shift 1
 		;;
 	*|'')
-		env_mode="defaults"
-		echo 1>&2 "${FUNCNAME:?}: unrecognized env mode; using ${env_mode:?} instead"
-		! [ $# -ge 1 ] || shift 1
+		echo 1>&2 "${FUNCNAME:?}: unrecognized argument; ignoring."
+		shift 1
 		;;
-	esac
+	esac;done
 
 	if [ "${env_mode:?}" = "full" ] ; then
 
