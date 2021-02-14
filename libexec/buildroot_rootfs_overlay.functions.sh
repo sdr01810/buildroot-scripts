@@ -14,13 +14,15 @@ source assert.functions.sh
 
 source as_list_with_separator.functions.sh
 
-source buildroot_rootfs_overlay_tarball.functions.sh
-
 source ensure_backup_of_original_file.functions.sh
+
+source list_mount_points_below.functions.sh
 
 ##
 
 source buildroot_config.functions.sh
+
+source buildroot_rootfs_overlay_tarball.functions.sh
 
 ##
 
@@ -168,6 +170,8 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	local variant="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT}"
 	case "${variant}" in standard) variant="" ;; esac
 
+	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
+
 	local did_just_create_output_directory_p=
 
 	if ! [[ -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
@@ -175,18 +179,23 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 		xx sudo mkdir -p "${BR2_DL_ROL_DIR:?}"
 		xx sudo mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
 
-		xx sudo qemu-debootstrap \
-			--verbose \
-			--merged-usr \
-			--log-extra-deps \
-			--keep-debootstrap-dir \
-			--arch="${arch:?}" \
-			${variant:+--variant="${variant:?}"} \
-			${package_inclusion_list_comma_separated:+--include="${package_inclusion_list_comma_separated:?}"} \
-			${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"} \
-			--cache-dir="${BR2_DL_ROL_DIR:?}" \
-			"${action_args[@]}" "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+		(
+			trap '
+				buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
+			' EXIT
 
+			xx sudo qemu-debootstrap \
+				--verbose \
+				--merged-usr \
+				--log-extra-deps \
+				--keep-debootstrap-dir \
+				--arch="${arch:?}" \
+				${variant:+--variant="${variant:?}"} \
+				${package_inclusion_list_comma_separated:+--include="${package_inclusion_list_comma_separated:?}"} \
+				${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"} \
+				--cache-dir="${BR2_DL_ROL_DIR:?}" \
+				"${action_args[@]}" "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+		)
 		#^-- NB: the rootfs overlay has files and directories that are not accessible to a non-root user
 
 		#^-- NB: the rootfs overlay has files (programs) that are setuid root
@@ -282,8 +291,7 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		[ -e "${d1:?}" ] || continue
 
-		xx sudo umount "${d1:?}"/sys  || :
-		xx sudo umount "${d1:?}"/proc || :
+		buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${d1:?}"
 
 		sudo find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
 		while read -r x1 ; do xx sudo rm -rf "${x1:?}" ; done
@@ -392,6 +400,15 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot__setup_specified_users(
 
 	xx "${BR2_ENV_CURRENT_BUILDROOT_DIR:?}/support/scripts/mkusers" \
 		"${full_users_table_fpn:?}" "${build_output_fs_target_dpn:?}" | /bin/sh
+}
+
+function buildroot_rootfs_overlay_util_ensure_no_mount_points_below() { # rootfs_overlay_dpn
+
+	local rootfs_overlay_dpn=${1:?missing value for rootfs_overlay_dpn} ; shift 1	
+
+	list_mount_points_below "${rootfs_overlay_dpn:?}" |
+
+	while read -r d1 ; do xx sudo umount "${d1:?}" ; done
 }
 
 ##
