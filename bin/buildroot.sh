@@ -83,10 +83,26 @@
 ##     buildroot.sh rootfs-overlay --clean-tarball-first
 ##     buildroot.sh rootfs-overlay --download-only
 ##     
-##     buildroot.all-output-trees.sh my_team_product_{xctc,main}_defconfig
-##     buildroot.all-output-trees.sh --build my_team_product_{xctc,main}_defconfig
-##     buildroot.all-output-trees.sh --clean-first my_team_product_{xctc,main}_defconfig
+##     buildroot.all-output-trees.sh
+##     buildroot.all-output-trees.sh --build
+##     buildroot.all-output-trees.sh --build :infer:main
+##     buildroot.all-output-trees.sh --build my_team_product_main_defconfig
+##     buildroot.all-output-trees.sh --build my_team_product_main_defconfig :infer:xctc
+##     buildroot.all-output-trees.sh --build my_team_product_main_defconfig my_team_product_xctc_defconfig
+##     buildroot.all-output-trees.sh --build my_team_product_main_defconfig :skip:xctc
+##     
+##     buildroot.all-output-trees.sh --clean-first :infer:main
+##     buildroot.all-output-trees.sh --clean-first my_team_product_main_defconfig
+##     buildroot.all-output-trees.sh --clean-first my_team_product_main_defconfig :infer:xctc
+##     buildroot.all-output-trees.sh --clean-first my_team_product_main_defconfig my_team_product_xctc_defconfig
+##     buildroot.all-output-trees.sh --clean-first my_team_product_main_defconfig :skip:xctc
+##     
 ##     buildroot.all-output-trees.sh --clean-only
+##     buildroot.all-output-trees.sh --clean-only :infer:main
+##     buildroot.all-output-trees.sh --clean-only my_team_product_main_defconfig
+##     buildroot.all-output-trees.sh --clean-only my_team_product_main_defconfig :infer:xctc
+##     buildroot.all-output-trees.sh --clean-only my_team_product_main_defconfig my_team_product_xctc_defconfig
+##     buildroot.all-output-trees.sh --clean-only my_team_product_main_defconfig :skip:xctc
 ##
 ##     buildroot.sh qemu-vm --run
 ##     buildroot.sh qemu-vm --run --using-initrd

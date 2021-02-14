@@ -49,6 +49,58 @@ function check_looks_like_buildroot_xctc_defconfig() { # xctc_defconfig_fbn
 	check_looks_like_buildroot_defconfig_for xctc "$@"
 }
 
+function resolve_buildroot_defconfig_for() { # output_selector defconfig_fbn [ defconfig_fbn_hint ]
+
+	local output_selector=${1:?missing value for output_selector} ; shift 1
+
+	local defconfig_fbn=${1:?missing value for defconfig_fbn} ; shift 1
+
+	if [[ ${defconfig_fbn:?} =~ ^(:skip:${output_selector:?})$ ]] ; then
+
+		return 0
+	fi
+
+	local result=
+
+	local defconfig_fbn_hint=${1} ; shift 1 || :
+
+	if [[ ${defconfig_fbn:?} =~ ^(:infer:${output_selector:?})$ ]] ; then
+
+		result=$(basename "${defconfig_fbn_hint:-${BR2_DEFCONFIG:-${BR2_ENV_DEFCONFIG:-}}")
+
+		result=${result/main_defconfig/${output_selector:?}_defconfig}
+		result=${result/xctc_defconfig/${output_selector:?}_defconfig}
+
+		if [[ ${output_selector} == xctc ]] ; then
+
+			# accept inference only if selected build output already exists
+
+			eval local selected_build_output_dpn=\${BR2_ENV_OUTPUT_${output_selector^^?}_DIR}
+
+			if ! [[ -n ${selected_build_output_dpn} && -d ${selected_build_output_dpn} ]] ; then 
+
+				result=
+			fi
+		fi
+	else
+		result=$(basename "${defconfig_fbn:?}")
+	fi
+
+	check_looks_like_buildroot_defconfig_for "${output_selector:?}" "${result:?}" || return $?
+
+	echo "${result}"
+}
+
+function resolve_buildroot_main_defconfig() { # defconfig_fbn [ defconfig_fbn_hint ]
+
+	resolve_buildroot_defconfig_for main "${@}"
+}
+
+function resolve_buildroot_xctc_defconfig() { # defconfig_fbn [ defconfig_fbn_hint ]
+
+	resolve_buildroot_defconfig_for xctc "${@}"
+}
+
 function buildroot_all_output_trees() { # ...
 
 	local action=
@@ -112,53 +164,65 @@ function buildroot_all_output_trees() { # ...
 	fi
 }
 
-function buildroot_all_output_trees_build() { # xctc_defconfig_fbn main_defconfig_fpn
+function buildroot_all_output_trees_build() { # [ main_defconfig_fbn [ xctc_defconfig_fbn ] ]
 
-	local xctc_defconfig_fbn="${1:?missing value for xctc_defconfig_fbn}" ; shift 1
+	local main_defconfig_fbn= xctc_defconfig_fbn=
 
-	local main_defconfig_fbn="${1:?missing value for main_defconfig_fbn}" ; shift 1
+	if [[ ${#} -ge 1 ]] ; then
 
-	check_looks_like_buildroot_xctc_defconfig "${xctc_defconfig_fbn:?}" || return $?
+		main_defconfig_fbn=${1:-:infer:main} ; shift 1
 
-	check_looks_like_buildroot_main_defconfig "${main_defconfig_fbn:?}" || return $?
+		main_defconfig_fbn=$(resolve_buildroot_main_defconfig "${main_defconfig_fbn:?}")
+	fi
 
-	xx :
+	if [[ ${#} -ge 1 ]] ; then
 
-	xx buildroot.sh --output-xctc "${xctc_defconfig_fbn:?}"
+		xctc_defconfig_fbn=${1:-:infer:xctc} ; shift 1
 
-	xx :
+		xctc_defconfig_fbn=$(resolve_buildroot_xctc_defconfig "${xctc_defconfig_fbn:?}" "${main_defconfig_fbn}")
+	fi
 
-	xx buildroot.sh --output-xctc update-defconfig
+	local output_selectors=()
+	local output_selector
 
-	xx :
+	! [[ -n ${xctc_defconfig_fbn} ]] || output_selectors+=( xctc )
 
-	xx buildroot.sh --output-main "${main_defconfig_fbn:?}"
+	! [[ -n ${main_defconfig_fbn} ]] || output_selectors+=( rol main )
 
-	xx :
+	for output_selector in "${output_selectors[@]}" ; do
 
-	xx buildroot.sh --output-main update-defconfig
+		local output_tree_goal= output_tree_goals=()
 
-	##
+		if [[ "${output_selector:?}" == xctc ]] ; then
+					
+			output_tree_goals+=( "${xctc_defconfig_fbn:?}" )
+		else
+			output_tree_goals+=( "${main_defconfig_fbn:?}" )
+		fi
 
-	local output_tree_type
+		output_tree_goals+=( update-defconfig all )
 
-	for output_tree_type in xctc rol main ; do
+		for output_tree_goal in "${output_tree_goals[@]}" ; do
 
-		xx :
+			if [[ ${output_tree_goal} == all || ${output_selector} =~ ^(xctc|main)$ ]] ; then
 
-		xx buildroot.sh --output-"${output_tree_type:?}" all
+				xx :
+
+				xx buildroot.sh --output-"${output_selector:?}" "${output_tree_goal:?}"
+			fi
+		done
 	done
 }
 
 function buildroot_all_output_trees_clean() { #
 
-	local output_tree_type
+	local output_selector
 
-	for output_tree_type in xctc rol main ; do
+	for output_selector in xctc rol main ; do
 
 		xx :
 
-		xx buildroot.sh --output-"${output_tree_type:?}" clean
+		xx buildroot.sh --output-"${output_selector:?}" clean
 	done
 }
 
