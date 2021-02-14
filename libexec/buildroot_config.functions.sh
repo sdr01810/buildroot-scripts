@@ -70,30 +70,58 @@ function cat_buildroot_config_quoted() {
 	fi
 }
 
-function list_buildroot_config_variable_bindings() {
+function list_buildroot_config_variable_bindings() { # [ --env-filter { none | omit | only } ]
 
-	set | egrep '^(BR_|BR2_|HOST)\w+=' |
+	local env_filter_mode=none
 
-	egrep -v '^HOST(NAME|TYPE)=' | #<-- defined by bash, not buildroot
+	while [[ ${#} -gt 0 ]] ; do
+	case "${1}" in
+	--env-filter)
+		env_filter_mode=${2:?missing value for env_filter_mode}
+		shift 2
+		;;
+	--)
+		shift 1
+		;;
+	-*)
+		echo 1>&2 "${FUNCNAME:?}: unrecognized option: ${1}"
+		return 2
+		;;
+	*|'')
+		echo 1>&2 "${FUNCNAME:?}: unrecognized argument(s): ${@}"
+		return 2
+		;;
+	esac;done
+
+	(set -o posix && set) |
+
+	(egrep '^(BR_|BR2_|HOST)\w+=' || :) |
+	#^-- TODO: include variables defined by buildroot that do not match /^(BR_|BR2_|HOST)/
+
+	(egrep -v '^HOST(NAME|TYPE)=' || :) | #<-- defined by bash, not buildroot
+
+	case "${env_filter_mode:?}" in
+	none)
+		cat
+		;;
+	omit)
+		(egrep -v '^BR2_ENV' || :)
+		;;
+	only)
+		(egrep '^BR2_ENV' || :)
+		;;
+	*)
+		echo 1>&2 "${FUNCNAME:?}: unrecognized env_filter_mode: ${1}"
+		return 2
+		;;
+	esac |
 
 	sort
-
-	#^-- TODO: include variables defined by buildroot that do not match /^(BR_|BR2_|HOST)/
 }
 
-function list_buildroot_config_variable_names_defined() {
+function list_buildroot_config_variable_names_defined() { # [ --env-filter { none | omit | only } ]
 
-	list_buildroot_config_variable_bindings | sed -e 's/=.*//'
-}
-
-function list_buildroot_config_env_variable_names_defined() {
-
-	list_buildroot_config_variable_names_defined | egrep '^BR2_ENV_'
-}
-
-function list_buildroot_config_non_env_variable_names_defined() {
-
-	list_buildroot_config_variable_names_defined | egrep -v '^BR2_ENV_'
+	list_buildroot_config_variable_bindings "$@" | sed -e 's/=.*//'
 }
 
 function load_buildroot_config() { # [--env {defaults|full}]
@@ -261,7 +289,7 @@ function load_buildroot_config_defaults__rootfs_overlay() {
 
 function overlay_buildroot_br2_env_vars_onto_br2_vars() {
 
-	local br2_env_variable_names=( $(list_buildroot_config_env_variable_names_defined) )
+	local br2_env_variable_names=( $(list_buildroot_config_variable_names_defined --env-filter only) )
 	local br2_env_variable_name
 
 	for br2_env_variable_name in "${br2_env_variable_names[@]}" ; do
