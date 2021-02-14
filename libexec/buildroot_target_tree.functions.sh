@@ -65,8 +65,6 @@ function buildroot_target_tree() { # ...
 
 	##
 
-	load_buildroot_config
-
         if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_target_tree_clean

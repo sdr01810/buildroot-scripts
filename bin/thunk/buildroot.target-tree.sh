@@ -24,6 +24,8 @@ source buildroot_target_tree.functions.sh
 
 function main() { # ...
 
+	load_buildroot_config
+
 	xx_buildroot_target_tree "$@"
 }
 

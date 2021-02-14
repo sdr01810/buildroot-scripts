@@ -108,8 +108,6 @@ function buildroot_rootfs_overlay() { # ...
 
 	##
 
-	load_buildroot_config
-
         if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_rootfs_overlay_clean

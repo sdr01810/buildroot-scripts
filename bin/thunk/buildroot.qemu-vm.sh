@@ -22,6 +22,8 @@ source buildroot_qemu_vm.functions.sh
 
 function main() { # ...
 
+	load_buildroot_config
+
 	xx_buildroot_qemu_vm "$@"
 }
 

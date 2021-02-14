@@ -16,8 +16,6 @@ source buildroot_config.functions.sh
 
 function buildroot_make() { # ...
 
-	load_buildroot_config
-
 	xx make "$@"
 }
 

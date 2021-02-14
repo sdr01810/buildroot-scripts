@@ -29,8 +29,6 @@ function buildroot_qemu_vm() { # [--run] ...
 		;;
 	esac
 
-	load_buildroot_config
-
 	xx_buildroot_qemu_vm_run "$@"
 }
 

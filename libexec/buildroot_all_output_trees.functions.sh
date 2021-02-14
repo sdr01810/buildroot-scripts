@@ -151,8 +151,6 @@ function buildroot_all_output_trees() { # ...
 
 	##
 
-	load_buildroot_config
-
         if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_all_output_trees_clean

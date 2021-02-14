@@ -24,6 +24,8 @@ source buildroot_host_tree.functions.sh
 
 function main() { # ...
 
+	load_buildroot_config
+
 	xx_buildroot_host_tree "$@"
 }
 

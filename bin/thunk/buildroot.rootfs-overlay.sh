@@ -34,6 +34,8 @@ source buildroot_rootfs_overlay.functions.sh
 
 function main() { # ...
 
+	load_buildroot_config
+
 	xx_buildroot_rootfs_overlay "$@"
 }
 
