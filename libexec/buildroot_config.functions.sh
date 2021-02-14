@@ -39,7 +39,7 @@ function cat_buildroot_config_quoted() {
 
 		if ! [ -f "${BR2_CONFIG:?}" ] ; then
 
-			echo 1>&2 "${FUNCNAME:?}: does not exist: ${BR2_CONFIG:?}; ignoring"
+			# no buildroot config file at inferred location
 			true
 		else
 			eval local $(omit_wsac "${BR2_CONFIG:?}" | egrep '^BR2_(ARCH)=')
