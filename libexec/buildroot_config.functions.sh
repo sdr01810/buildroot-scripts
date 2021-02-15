@@ -19,7 +19,7 @@ source omit_wsac.functions.sh
 
 ##
 
-function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main ]
+function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main | --output-none ]
 
 	local output_selector= output_dpn=${BR2_ENV_OUTPUT_DIR}
 
@@ -28,6 +28,13 @@ function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main ]
 	--output-xctc|--output-main)
 		output_selector=${1#--output-}
 		eval output_dpn=\${BR2_ENV_OUTPUT_${output_selector^^?}_DIR}
+
+		shift 1
+		;;
+
+	--output-none)
+		output_selector=${1#--output-}
+		output_dpn=
 
 		shift 1
 		;;
@@ -159,7 +166,7 @@ function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-
 		shift 2
 		;;
 
-	--output-xctc|--output-main)
+	--output-xctc|--output-main|--output-none)
 		output_selector=${1#--output-}
 
 		shift 1
@@ -175,7 +182,7 @@ function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-
 		;;
 	esac;done
 
-	load_buildroot_config_defaults --"${defaults_mode:?}"
+	load_buildroot_config__defaults --"${defaults_mode:?}"
 
 	if ! eval $(cat_buildroot_config_quoted ${output_selector:+--output-${output_selector}}) ; then
 
@@ -183,7 +190,7 @@ function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-
 		return 2
 	fi
 
-	overlay_buildroot_br2_env_vars_onto_br2_vars
+	load_buildroot_config__overlay_br2_env_onto_br2
 
 	if [ -n "${buildroot_config_debug_p}" ] ; then
 
@@ -193,7 +200,7 @@ function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-
 	fi
 }
 
-function load_buildroot_config_defaults() { # [ --file-too | --file-only | --file-omit ]
+function load_buildroot_config__defaults() { # [ --file-too | --file-only | --file-omit ]
 
 	local defaults_mode=file-too
 
@@ -234,7 +241,7 @@ function load_buildroot_config_defaults() { # [ --file-too | --file-only | --fil
 	done
 }
 
-function load_buildroot_config_defaults__customization_file() {
+function load_buildroot_config__defaults__customization_file() {
 
 	local f1="buildroot.env"
 
@@ -252,7 +259,7 @@ function load_buildroot_config_defaults__customization_file() {
 	fi;fi
 }
 
-function load_buildroot_config_defaults__core() {
+function load_buildroot_config__defaults__core() {
 
 	export BR2_ENV_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-}"
 
@@ -277,7 +284,7 @@ function load_buildroot_config_defaults__core() {
 	export BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:?}"
 }
 
-function load_buildroot_config_defaults__rootfs_overlay() {
+function load_buildroot_config__defaults__rootfs_overlay() {
 
 	: "${BR2_ENV_DL_PTB_DIR:?missing value for BR2_ENV_DL_PTB_DIR}"
 
@@ -329,7 +336,7 @@ function load_buildroot_config_defaults__rootfs_overlay() {
 	fi
 }
 
-function overlay_buildroot_br2_env_vars_onto_br2_vars() {
+function load_buildroot_config__overlay_br2_env_onto_br2() {
 
 	local br2_env_variable_names=( $(list_buildroot_config_variable_names_defined --env-filter only) )
 	local br2_env_variable_name
