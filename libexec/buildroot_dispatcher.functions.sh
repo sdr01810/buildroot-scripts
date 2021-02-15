@@ -267,9 +267,6 @@ function buildroot_dispatcher() { # ...
 
 	local action_vars=()
 
-	! [ -n "${BR2_DEFCONFIG:-${BR2_ENV_DEFCONFIG}}" ] ||
-	action_vars+=( BR2_DEFCONFIG="${BR2_DEFCONFIG:-${BR2_ENV_DEFCONFIG:?}}" )
-
 	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] || 
 	case "${action:?}" in
 	make)

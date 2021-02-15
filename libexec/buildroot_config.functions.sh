@@ -261,8 +261,6 @@ function load_buildroot_config__defaults__core() {
 
 	export BR2_ENV_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-}"
 
-	export BR2_ENV_DEFCONFIG="${BR2_ENV_DEFCONFIG:-}"
-
 	export BR2_ENV_EXTERNAL="${BR2_ENV_EXTERNAL:-}"
 
 	##
