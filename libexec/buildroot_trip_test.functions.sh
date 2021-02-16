@@ -89,9 +89,10 @@ function buildroot_trip_test_run() { # [ starting_state ]
 
 	local current_state=${starting_state:?}
 
-	while [[ -n ${current_state} &&  ${current_state:?} != done ]] ; do
+	while [[ -n ${current_state} && ${current_state:?} != done ]] ; do
 
 		current_state=$("${FUNCNAME:?}"_1 "${current_state:?}") || break
+
 	done
 
 	if [[ "${current_state}" != done ]] ; then
@@ -106,40 +107,69 @@ function buildroot_trip_test_run() { # [ starting_state ]
 
 function buildroot_trip_test_run_1() { # [state]
 
-	local state=${1:-0} ; shift 1 || :
+	local state=${1:?missing value for state} ; shift 1
 
 	declare -A state_indexes_by_name_or_index=(
 
-		[0]=0    [start]=0
+		[0]=0      [start]=0
 
-		[1]=1    [install]=1
+		[10]=10    [start.clean]=10
 
-		[2]=2    [xctc-config]=2
+		[20]=20    [start.install]=20
 
-		[3]=3    [main-config]=3
+		[30]=30    [start.config.xctc]=30
 
-		[4]=4    [xctc-build]=4
+		[40]=40    [start.config.main]=40
 
-		[5]=5    [rol-build]=5
+		[50]=50    [start.build.xctc]=50
 
-		[6]=6    [main-build]=6
+		[60]=60    [start.build.rol]=60
 
-		[7]=7    [preserve-all-outputs]=7
+		[70]=70    [start.build.main]=70
 
-		[8]=8    [main-clean]=8
+		##
 
-		[9]=9    [rol-clean]=9
+		[100]=100  [again]=100
 
-		[10]=10  [xctc-clean]=10
+		[110]=110  [again.install]=110
 
-		[11]=11  [finish]=11
+		[120]=120  [again.config.xctc]=120
+
+		[130]=130  [again.config.main]=130
+
+		[140]=140  [again.build.xctc]=140
+
+		[150]=150  [again.build.rol]=150
+
+		[160]=160  [again.build.main]=160
+
+		##
+
+		[200]=200  [stash]=200
+
+		[210]=210  [stash.all-outputs]=210
+
+		##
+
+		[300]=300  [clean]=300
+
+		[310]=310  [clean.main]=310
+
+		[320]=320  [clean.rol]=320
+
+		[330]=330  [clean.xctc]=330
+
+		##
+
+		[999]=999  [finish]=999
 	)
 
-	declare -A state_replacements_by_index=(
+	declare -A state_replacements_by_index
 
-#!#		[${state_indexes_by_name_or_index[install]:?}]=finish # FIXME: debug
+	! [[ -n ${buildroot_trip_test_debug_p} ]] ||
+	state_replacements_by_index+=(
 
-		#^-- used when debugging; otherwise empty
+#!#		[${state_indexes_by_name_or_index[start]:?}]=again
 	)
 
 	local d1 f1
@@ -154,7 +184,7 @@ function buildroot_trip_test_run_1() { # [state]
 	fi
 
 	case "${state:?}" in
-	0|start)
+	10|start.clean)
 
 		expect_xc 0 buildroot_trip_test_clean
 		expect_xc 0 test ! -e buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -164,61 +194,61 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test ! -d buildroot
 		;;
 
-	1|install)
+	20|start.install)
 
-		expect_xc 2 buildroot.sh install --bad-option
+		expect_xc 2 buildroot.sh >&- install --bad-option
 		expect_xc 0 test ! -d buildroot
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
-		expect_xc 0 buildroot.sh install --everything
+		expect_xc 0 buildroot.sh >&- install --everything
 		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)"
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
-		expect_xc 0 buildroot.sh install --dependencies-only
+		expect_xc 0 buildroot.sh >&- install --dependencies-only
 		expect_xc 0 test ! -d buildroot -a -n "$(sudo which debootstrap)"
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
-		expect_xc 0 buildroot.sh install
+		expect_xc 0 buildroot.sh >&- install
 		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)"
 		;;
 
-	2|xctc-config)
+	30|start.config.xctc)
 
-		# TODO: place xctc-config tests here
+		# TODO: implement these tests
 		;;
 
-	3|main-config)
+	40|start.config.main)
 
-		# TODO: place main-config tests here
+		# TODO: implement these tests
 		;;
 
-	4|xctc-build)
+	50|start.build.xctc)
 
-		expect_xc 1 buildroot.sh --output-main toolchain
+		expect_xc 1 buildroot.sh >&- --output-main toolchain
 		expect_xc 0 test ! -d buildroot-dl-ptb -a ! -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test ! -e buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test ! -e buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 1 buildroot.sh --output-main sdk
+		expect_xc 1 buildroot.sh >&- --output-main sdk
 		expect_xc 0 test ! -d buildroot-dl-ptb -a ! -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test ! -e buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test ! -e buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 1 buildroot.sh --output-xctc my_team_product_x86_64_main_defconfig
+		expect_xc 1 buildroot.sh >&- --output-xctc my_team_product_x86_64_main_defconfig
 		expect_xc 0 test ! -d buildroot-dl-ptb -a ! -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test ! -e buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test ! -e buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh --output-xctc my_team_product_x86_64_xctc_defconfig
+		expect_xc 0 buildroot.sh >&- --output-xctc my_team_product_x86_64_xctc_defconfig
 		expect_xc 0 test ! -d buildroot-dl-ptb -a   -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test ! -e buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test ! -e buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -227,7 +257,7 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -f buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		xx rm -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh --output-xctc toolchain
+		expect_xc 0 buildroot.sh >&- --output-xctc toolchain
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -236,7 +266,7 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -f buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		xx rm -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh --output-xctc sdk
+		expect_xc 0 buildroot.sh >&- --output-xctc sdk
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -245,7 +275,7 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -f buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		xx rm -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh --output-xctc
+		expect_xc 0 buildroot.sh >&- --output-xctc
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -254,7 +284,7 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -f buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		xx rm -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh --output-xctc all
+		expect_xc 0 buildroot.sh >&- --output-xctc all
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -263,7 +293,7 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -f buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		xx rm -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh toolchain
+		expect_xc 0 buildroot.sh >&- toolchain
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -272,74 +302,74 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -f buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		xx rm -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 
-		expect_xc 0 buildroot.sh sdk
+		expect_xc 0 buildroot.sh >&- sdk
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a ! -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		;;
 
-	5|rol-build)
+	60|start.build.rol)
 
-		expect_xc 2 buildroot.sh rootfs-overlay --bad-option
+		expect_xc 2 buildroot.sh >&- rootfs-overlay --bad-option
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a ! -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 1 buildroot.sh rootfs-overlay --build --clean-only
+		expect_xc 1 buildroot.sh >&- rootfs-overlay --build --clean-only
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a ! -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 1 buildroot.sh rootfs-overlay --build --clean-first --clean-only
+		expect_xc 1 buildroot.sh >&- rootfs-overlay --build --clean-first --clean-only
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a ! -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 1 buildroot.sh rootfs-overlay --clean-first --clean-only
+		expect_xc 1 buildroot.sh >&- rootfs-overlay --clean-first --clean-only
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a ! -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay --download-only
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --download-only
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a ! -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh my_team_product_x86_64_main_defconfig
+		expect_xc 0 buildroot.sh >&- my_team_product_x86_64_main_defconfig
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay --download-only
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --download-only
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay --build --download-only
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --build --download-only
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay --build --clean-first
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --build --clean-first
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
 		xx :
 		xx sudo rm -rf buildroot-output-rol
 
-		expect_xc 0 buildroot.sh rootfs-overlay --build
-		expect_xc 0 test -d buildroot-dl-rol -a ! -d buildroot-output-rol -a -d buildroot-output-main
-		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --build
+		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
+		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
 		xx :
 		xx sudo rm -rf buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay --build
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --build
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay --clean-first
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --clean-first
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
-		expect_xc 0 buildroot.sh rootfs-overlay
+		expect_xc 0 buildroot.sh >&- rootfs-overlay
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 		;;
 
-	6|main-build)
+	70|start.build.main)
 
 		xx :
 		xx rm -f buildroot-output-main/images/rootfs.cpio
@@ -347,23 +377,23 @@ function buildroot_trip_test_run_1() { # [state]
 		xx :
 		xx rm -rf buildroot-dl-ptb/toolchain-external-custom
 
-		expect_xc 0 buildroot.sh toolchain{,-external{,-custom}}-dirclean
+		expect_xc 0 buildroot.sh >&- toolchain{,-external{,-custom}}-dirclean
 
 		xx :
 		xx mv -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz{,.ASIDE}
 
-		expect_xc 0 buildroot.sh my_team_product_x86_64_main_defconfig
+		expect_xc 0 buildroot.sh >&- my_team_product_x86_64_main_defconfig
 		expect_xc 0 test ! -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test ! -s buildroot-output-main/images/rootfs.cpio
 
-		expect_xc 2 buildroot.sh --output-main all
+		expect_xc 2 buildroot.sh >&- --output-main all
 		expect_xc 0 test ! -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test ! -s buildroot-output-main/images/rootfs.cpio
 
 		xx :
 		xx mv -f buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz{.ASIDE,}
 
-		expect_xc 0 buildroot.sh --output-main all
+		expect_xc 0 buildroot.sh >&- --output-main all
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-main/images/rootfs.cpio
@@ -371,21 +401,21 @@ function buildroot_trip_test_run_1() { # [state]
 		xx :
 		xx rm -f buildroot-output-main/images/rootfs.cpio
 
-		expect_xc 0 buildroot.sh --output-main
+		expect_xc 0 buildroot.sh >&- --output-main
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-main/images/rootfs.cpio
 
 		xx :
 		xx rm -f buildroot-output-main/images/rootfs.cpio
 
-		expect_xc 0 buildroot.sh all
+		expect_xc 0 buildroot.sh >&- all
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-main/images/rootfs.cpio
 
 		xx :
 		xx rm -f buildroot-output-main/images/rootfs.cpio
 
-		expect_xc 0 buildroot.sh
+		expect_xc 0 buildroot.sh >&-
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-main/images/rootfs.cpio
 
@@ -396,7 +426,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 egrep '^home/debug$'
 		;;
 
-	7|preserve-all-outputs)
+	210|stash.all-outputs)
 
 		if [[ -n ${buildroot_trip_test_debug_p} ]] ; then
 
@@ -421,19 +451,19 @@ function buildroot_trip_test_run_1() { # [state]
 		fi
 		;;
 
-	8|main-clean)
+	310|clean.main)
 
 		xx :
 		xx ln -f buildroot-output-main/images/rootfs.cpio{,.ASIDE}
 
-		expect_xc 0 buildroot.sh --output-main clean
+		expect_xc 0 buildroot.sh >&- --output-main clean
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test ! -s buildroot-output-main/images/rootfs.cpio
 
 		xx :
 		xx ln -f buildroot-output-main/images/rootfs.cpio{.ASIDE,}
 
-		expect_xc 0 buildroot.sh clean
+		expect_xc 0 buildroot.sh >&- clean
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test ! -s buildroot-output-main/images/rootfs.cpio
 
@@ -444,9 +474,9 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -z "$(xx : && xx find buildroot-output-main -mindepth 2 ! -type d)"
 		;;
 
-	9|rol-clean)
+	320|clean.rol)
 
-		expect_xc 0 buildroot.sh rootfs-overlay --clean-only
+		expect_xc 0 buildroot.sh >&- rootfs-overlay --clean-only
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test ! -d buildroot-output-rol/debootstrap -a ! -s buildroot-output-rol.tar
 
@@ -454,9 +484,9 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -z "$(xx : && xx find buildroot-output-rol -mindepth 1 ! -type d)"
 		;;
 
-	10|xctc-clean)
+	330|clean.xctc)
 
-		expect_xc 0 buildroot.sh --output-xctc clean
+		expect_xc 0 buildroot.sh >&- --output-xctc clean
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a -d buildroot-output-main
 		expect_xc 0 test ! -s buildroot-output-xctc/images/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz
@@ -465,7 +495,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -z "$(xx : && xx find buildroot-output-xctc -mindepth 2 ! -type d)"
 		;;
 
-	11|finish)
+	999|finish) # must be highest state
 
 		result=done
 		;;
@@ -480,11 +510,22 @@ function buildroot_trip_test_run_1() { # [state]
 	if ! [[ -n ${result} ]] ; then
 
 		state=${state_indexes_by_name_or_index[${state:?}]}
+		#^-- ensure current state is in index form
 
-		result=$((++ state))
+		while true ; do
+
+			((++ state))
+
+			! [[ -n ${state_indexes_by_name_or_index[${state:?}]} ]] || break
+
+			#^-- keep advancing until we hit the next valid state; 
+			#^-- by design: eventually we will hit state 'finish'
+		done
+
+		result=${state:?}
 	fi
 
-	echo "${result}"
+	echo "${result:?}"
 }
 
 function buildroot_trip_test_clean() { #
