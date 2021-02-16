@@ -206,7 +206,7 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	xx :
 
-	(xx sudo find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 || :) |
+	(xx sudo find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
 
 	while read -r x1 ; do xx sudo rm -rf "${x1:?}" ; done
 
