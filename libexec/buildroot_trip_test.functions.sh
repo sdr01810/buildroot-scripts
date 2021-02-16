@@ -64,13 +64,15 @@ function buildroot_trip_test() { # ...
 		;;
 	esac;done
 
+	: "${action:=run}"
+
 	action_args+=( "$@" ) ; shift $#
 
 	##
 
 	unset_buildroot_config
 
-        if [[ -n ${clean_all_p} ] ; then
+        if [[ -n ${clean_all_p} ]] ; then
 
 		xx_buildroot_trip_test_clean
 	fi
@@ -81,20 +83,18 @@ function buildroot_trip_test() { # ...
 	fi
 }
 
-function buildroot_trip_test_run() { # [starting_state]
+function buildroot_trip_test_run() { # [ starting_state ]
 
-	local starting_state="${1:-0}" ; ! [ $# -ge 1 ] || shift 1
+	local starting_state=${1:-0} ; shift 1 || :
 
-	local current_state="${starting_state:?}"
+	local current_state=${starting_state:?}
 
-	while [ "${current_state:?}" != "done" ] ; do
+	while [[ -n ${current_state} &&  ${current_state:?} != done ]] ; do
 
-		current_state="$(buildroot_trip_test_run_1 "${current_state:?}" || :)"
-
-		[ -n "${current_state}" ] || break
+		current_state=$("${FUNCNAME:?}"_1 "${current_state:?}") || break
 	done
 
-	if [ "${current_state}" != "done" ] ; then
+	if [[ "${current_state}" != done ]] ; then
 
 		echo 1>&2
 		echo 1>&2 "^-- ${this_script_fbn:?}: FAIL"
@@ -106,16 +106,55 @@ function buildroot_trip_test_run() { # [starting_state]
 
 function buildroot_trip_test_run_1() { # [state]
 
-	local state="${1:-0}" ; ! [ $# -ge 1 ] || shift 1
+	local state="${1:-0}" ; shift 1 || :
 
-	[ $# -eq 0 ]
+	declare -A state_indexes_by_name_or_index=(
 
-	local result= #<-- assume the worst
+		[0]=0    [start]=0
+
+		[1]=1    [install]=1
+
+		[2]=2    [xctc-config]=2
+
+		[3]=3    [main-config]=3
+
+		[4]=4    [xctc-build]=4
+
+		[5]=5    [rol-build]=5
+
+		[6]=6    [main-build]=6
+
+		[7]=7    [preserve-all-outputs]=7
+
+		[8]=8    [main-clean]=8
+
+		[9]=9    [rol-clean]=9
+
+		[10]=10  [xctc-clean]=10
+
+		[11]=11  [finish]=11
+	)
+
+	declare -A state_replacements_by_index=(
+
+#!#		[${state_indexes_by_name_or_index[install]:?}]=finish # FIXME: debug
+
+		#^-- used when debugging; otherwise empty
+	)
 
 	local d1 f1
 
+	local result=
+
+	state=${state_indexes_by_name_or_index[${state:?}]}
+
+	if [[ -n ${state_replacements_by_index[${state:?}]} ]] ; then
+
+		state=${state_replacements_by_index[${state:?}]}
+	fi
+
 	case "${state:?}" in
-	0) # start
+	0|start)
 
 		expect_xc 0 buildroot_trip_test_clean || return $?
 		expect_xc 0 test ! -e buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz || return $?
@@ -125,7 +164,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test ! -d buildroot || return $?
 		;;
 
-	1) # install
+	1|install)
 
 		expect_xc 2 buildroot.sh install --bad-option || return $?
 		expect_xc 0 test ! -d buildroot || return $?
@@ -152,7 +191,17 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)" || return $?
 		;;
 
-	2) # xctc build
+	2|xctc-config)
+
+		# TODO: place xctc-config tests here
+		;;
+
+	3|main-config)
+
+		# TODO: place main-config tests here
+		;;
+
+	4|xctc-build)
 
 		expect_xc 1 buildroot.sh --output-main toolchain || return $?
 		expect_xc 0 test ! -d buildroot-dl-ptb -a ! -d buildroot-output-xctc -a ! -d buildroot-output-main || return $?
@@ -229,7 +278,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -s buildroot-dl-ptb/buildroot-xctc/x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz || return $?
 		;;
 
-	3) # rol build
+	5|rol-build)
 
 		expect_xc 2 buildroot.sh rootfs-overlay --bad-option || return $?
 		expect_xc 0 test ! -d buildroot-dl-rol -a ! -d buildroot-output-rol -a ! -d buildroot-output-main || return $?
@@ -290,7 +339,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar || return $?
 		;;
 
-	4) # main build
+	6|main-build)
 
 		xx :
 		xx rm -f buildroot-output-main/images/rootfs.cpio
@@ -347,7 +396,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 egrep '^home/debug$' || return $?
 		;;
 
-	5) # preserve all outputs
+	7|preserve-all-outputs)
 
 		if [ -n "${buildroot_trip_test_debug_p}" ] ; then
 
@@ -372,7 +421,7 @@ function buildroot_trip_test_run_1() { # [state]
 		fi
 		;;
 
-	6) # main clean
+	8|main-clean)
 
 		xx :
 		xx ln -f buildroot-output-main/images/rootfs.cpio{,.ASIDE}
@@ -395,7 +444,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -z "$(xx : && xx find buildroot-output-main -mindepth 2 ! -type d)" || return $?
 		;;
 
-	7) # rol clean
+	9|rol-clean)
 
 		expect_xc 0 buildroot.sh rootfs-overlay --clean-only || return $?
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main || return $?
@@ -405,7 +454,7 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -z "$(xx : && xx find buildroot-output-rol -mindepth 1 ! -type d)" || return $?
 		;;
 
-	8) # xctc clean
+	10|xctc-clean)
 
 		expect_xc 0 buildroot.sh --output-xctc clean || return $?
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-xctc -a -d buildroot-output-main || return $?
@@ -416,20 +465,24 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -z "$(xx : && xx find buildroot-output-xctc -mindepth 2 ! -type d)" || return $?
 		;;
 
-	9) # finish
+	11|finish)
 
-		result="done"
+		result=done
 		;;
 
 	*)
-		echo 1>&2 "${FUNCNAME:?}: unsupported state: ${state:?}"
-		return 2
+		# skip
 		;;
 	esac
 
-	assert [ $? -eq 0 ] || return $?
+	assert [ $? -eq 0 ]
 
-	result="${result:-$((++ state))}"
+	if ! [[ -n ${result} ]] ; then
+
+		state=${state_indexes_by_name_or_index[${state:?}]}
+
+		result=$((++ state))
+	fi
 
 	echo "${result}"
 }
