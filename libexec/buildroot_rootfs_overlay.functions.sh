@@ -254,6 +254,15 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	xx :
 
+	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/machine-id
+
+	#^-- ensure the rootfs overlay does not contain instance-specific data
+	#^-- by design: each rootfs overlay needs to support multiple uses/instances
+
+	##
+
+	xx :
+
 	xx rm -f "${BR2_OUTPUT_ROL_DIR:?}"/etc/.*.lock
 
 	#^-- remove etc/ lock files (cf. vipw(8) and friends)
