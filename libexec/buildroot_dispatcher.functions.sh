@@ -42,7 +42,7 @@ function buildroot_dispatcher() { # ...
 	local action=
 	local action_args=()
 	local output_selector=
-	local x1= x2=
+	local d1 d2 x1 x2
 
 	while [ $# -gt 0 ] ; do
 	case "${1}" in
@@ -331,41 +331,53 @@ function buildroot_dispatcher() { # ...
 
 			case "x ${action_args[@]} x" in
 			*" clean "*|*" distclean "*|*" toolchain-external"*"clean "*)
-				for x1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
-				for x2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc/* ; do
+				for d1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
+				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
 
-					[[ -e ${x1:?} && -e ${x2:?} ]] || continue
+					for x2 in "${d2:?}"/* ; do
+					for x1 in "${d1:?}/${x2#${d2:?}/}" ; do
 
-					xx rm -rf "${x1:?}/${x2##*/buildroot-xctc/}"
+						[[ -e ${d1:?} && -e ${x2:?} ]] || continue
+
+						xx rm -rf "${x1:?}"
+					done;done
 				done;done
 				#^-- forces a non-xctc build that uses the xctc sdk to 'download' a fresh copy
 
-				for x1 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
+				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
 
-					[[ -e ${x1:?} ]] || continue
+					[[ -e ${d2:?} ]] || continue
 
-					xx rm -rf "${x1:?}"
+					xx rm -rf "${d2:?}"
 				done
 				;;
 
 			*" sdk "*)
-				for x1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
-				for x2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc/* ; do
+				for d1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
+				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
 
-					[[ -e ${x1:?} && -e ${x2:?} ]] || continue
+					for x2 in "${d2:?}"/* ; do
+					for x1 in "${d1:?}/{x2#${d2:?}/}" ; do
 
-					xx rm -rf "${x1:?}/${x2##*/buildroot-xctc/}"
+						[[ -e ${d1:?} && -e ${x2:?} ]] || continue
+
+						xx rm -rf "${x1:?}"
+					done;done
 				done;done
 				#^-- forces a non-xctc build that uses the xctc sdk to 'download' a fresh copy
 
-				for x1 in "${BR2_ENV_OUTPUT_DIR:?}"/images/*_sdk* ; do
-				for x2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
+				for d1 in "${BR2_ENV_OUTPUT_DIR:?}"/images ; do
+				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
 
-					[[ -e ${x1:?} ]] || continue
+					for x1 in "${d1:?}"/*_sdk* ; do
+					for x2 in "${d2:?}/${x1#${d1:?}/}" ; do
 
-					[[ -e ${x2:?} ]] || xx mkdir -p "${x2:?}"
+						[[ -e ${x1:?} ]] || continue
 
-					xx rsync -a -i -c "${x1:?}" "${x2:?}/${x1##*/images/}"
+						[[ -e ${d2:?} ]] || xx mkdir -p "${d2:?}"
+
+						xx rsync -a -i -c "${x1:?}" "${x2:?}"
+					done;done
 				done;done
 				;;
 			esac
