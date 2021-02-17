@@ -55,6 +55,8 @@ function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main | --o
 	(
 		cd_buildroot
 
+		# define interpolation feeders we already know:
+
 		local BASE_DIR="${output_dpn:?}"
 
 		local BR2_BASE_DIR="${output_dpn:?}"
@@ -70,16 +72,19 @@ function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main | --o
 		if ! [[ -e ${BR2_CONFIG:?} ]] ; then
 
 			# no buildroot config file at inferred location
-			true
+			:
 		else
-			eval local $(omit_wsac "${BR2_CONFIG:?}" | egrep '^BR2_(ARCH)=')
-			#^-- read expansion bootstrappers first
+			local buildroot_config_lines=$(omit_wsac "${BR2_CONFIG:?}")
+
+			eval local $(echo "${buildroot_config_lines}" | egrep '^BR2_(ARCH)=')
+			#^-- extract remaining interpolation feeders...
 
 			local ARCH=${BR2_ARCH:?missing buildroot config value for BR2_ARCH}
 
 			local KERNEL_ARCH=$(as_buildroot_kernel_arch "${BR2_ARCH:?}")
 
-			omit_wsac "${BR2_CONFIG:?}" | sed \
+			# ...and interpolate
+			echo "${buildroot_config_lines}" | sed \
 				\
 				-e "s#\$(ARCH)#${ARCH:?}#g" \
 				-e "s#\$(BASE_DIR)#${BASE_DIR:?}#g" \
@@ -124,7 +129,8 @@ function list_buildroot_config_variable_bindings() { # [ --env-filter { none | o
 	(set -o posix && set) |
 
 	(egrep '^(BR_|BR2_|HOST)\w+=' || :) |
-	#^-- TODO: include variables defined by buildroot that do not match /^(BR_|BR2_|HOST)/
+
+	#^-- TODO: include additional variables defined by buildroot
 
 	(egrep -v '^HOST(NAME|TYPE)=' || :) | #<-- defined by bash, not buildroot
 
