@@ -50,6 +50,7 @@ function extract_from_buildroot_rootfs_overlay_tarball() { # tarball_fpn
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--strip-components=1"
 
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--keep-directory-symlink"
+
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--delay-directory-restore"
 
 	case "${f1:?}" in
