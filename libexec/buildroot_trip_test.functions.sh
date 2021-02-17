@@ -347,14 +347,14 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
 		xx :
-		xx sudo_pass_through rm -rf buildroot-output-rol
+		xx rm -rf buildroot-output-rol
 
 		expect_xc 0 buildroot.sh >&- rootfs-overlay --build
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
 		xx :
-		xx sudo_pass_through rm -rf buildroot-output-rol.tar
+		xx rm -rf buildroot-output-rol.tar
 
 		expect_xc 0 buildroot.sh >&- rootfs-overlay --build
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
@@ -439,14 +439,14 @@ function buildroot_trip_test_run_1() { # [state]
 
 				xx :
 
-				xx sudo_pass_through rsync -a --delete "${d1:?}"{,.~lkg~}/ # lkg == last known good
+				xx rsync -a --delete "${d1:?}"{,.~lkg~}/ # lkg == last known good
 			done
 
 			for f1 in buildroot-output-rol.tar ; do
 
 				xx :
 
-				xx sudo_pass_through rsync -a --delete "${f1:?}"{,.~lkg~} # lkg == last known good
+				xx rsync -a --delete "${f1:?}"{,.~lkg~} # lkg == last known good
 			done
 		fi
 		;;
@@ -531,11 +531,11 @@ function buildroot_trip_test_run_1() { # [state]
 function buildroot_trip_test_clean() { #
 
 	xx :
-	xx sudo_pass_through rm -rf buildroot-output-rol.tar
-	xx sudo_pass_through rm -rf buildroot-output-rol
+	xx rm -rf buildroot-output-rol.tar
+	xx rm -rf buildroot-output-rol
 
 	xx :
-	xx sudo_pass_through rm -rf buildroot-dl-rol
+	xx rm -rf buildroot-dl-rol
 
 	xx :
 	xx rm -rf buildroot-output-main

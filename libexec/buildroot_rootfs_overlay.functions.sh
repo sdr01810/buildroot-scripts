@@ -161,12 +161,19 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 
-	local did_just_create_output_directory_p=
+	local rol_dl_and_output_dirs=( "${BR2_DL_ROL_DIR:?}" "${BR2_OUTPUT_ROL_DIR:?}" )
+
+	local did_just_create_rol_output_dir_p=
+	local did_just_create_rol_dl_dir_p=
+
+	local d1
 
 	if ! [[ -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
 
-		xx sudo_pass_through mkdir -p "${BR2_DL_ROL_DIR:?}"
-		xx sudo_pass_through mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
+		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+
+			xx mkdir -p "${d1:?}"
+		done
 
 		(
 			trap '
@@ -189,7 +196,24 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 		#^-- NB: the rootfs overlay has files (programs) that are setuid root
 
-		did_just_create_output_directory_p=t
+		##
+
+		local uid gid
+		uid=$(sudo_pass_through_real_uid)
+		gid=$(sudo_pass_through_real_gid)
+
+		if [[ ${uid:?} -ne 0 || ${gid:?} -ne 0 ]] ; then
+
+			for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+
+				xx sudo_pass_through chown -R "${uid:?}:${gid:?}" "${d1:?}"
+			done
+		fi
+
+		##
+
+		did_just_create_rol_output_dir_p=t
+		did_just_create_rol_dl_dir_p=t
 	fi
 
 	case ": ${action_args[@]} :" in
@@ -199,16 +223,18 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 		;;
 	esac
 
-	if [[ -e ${BR2_OUTPUT_ROL_DIR:?}.tar && ! -n ${did_just_create_output_directory_p} ]] ; then
+	if [[ -e ${BR2_OUTPUT_ROL_DIR:?}.tar && ! -n ${did_just_create_rol_output_dir_p} ]] ; then
 
 		return 0
 	fi
 
+	##
+
 	xx :
 
-	(xx sudo_pass_through find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
+	(xx find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
 
-	while read -r x1 ; do xx sudo_pass_through rm -rf "${x1:?}" ; done
+	while read -r x1 ; do xx rm -rf "${x1:?}" ; done
 
 	#^-- empty contents of /var/cache
 
@@ -216,11 +242,11 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	xx :
 
-	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/hostname
+	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/hostname
 
-	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/ld.so.cache
+	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/ld.so.cache
 
-	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/resolv.conf
+	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/resolv.conf
 
 	#^-- ensure the rootfs overlay does not contain build host details
 
@@ -255,7 +281,8 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	)
 	done;done
 
-	assert_that [ -e "${BR2_OUTPUT_ROL_DIR:?}.tar" ] || return $?
+	assert_that [ -e "${BR2_OUTPUT_ROL_DIR:?}.tar" ]
+	return $?
 }
 
 function buildroot_rootfs_overlay_clean() { # [--tarball-only]
@@ -266,7 +293,7 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		[ -e "${x1:?}" ] || continue
 
-		xx sudo_pass_through rm -rf "${x1:?}"
+		xx rm -rf "${x1:?}"
 	done
 
 	case ": ${@} :" in
@@ -282,8 +309,8 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${d1:?}"
 
-		sudo_pass_through find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
-		while read -r x1 ; do xx sudo_pass_through rm -rf "${x1:?}" ; done
+		find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
+		while read -r x1 ; do xx rm -rf "${x1:?}" ; done
 	done
 }
 
@@ -354,7 +381,9 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot__extract_overlay() {
 		xx : "${FUNCNAME:?}: tar_rc = ${tar_rc:?}"
 	fi
 
-	[ ${tar_rc:?} -eq 0 ] || return 1
+	[ ${tar_rc:?} -eq 0 ]
+
+	return $?
 }
 
 function buildroot_rootfs_overlay_run_hook_post_fakeroot__setup_specified_devices() {
