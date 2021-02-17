@@ -30,8 +30,7 @@ function create_buildroot_rootfs_overlay_tarball() { # tarball_fpn rootfs_overla
 
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--sparse"
 
-	local create_tarball="sudo tar cf" # must use sudo(8) to ensure full access to rootfs overlay contents
-	#^-- FIXME: probe for fakeroot context, and use sudo(8) unless in fakeroot context
+	local create_tarball="sudo_pass_through tar cf" # FIXME: stop using sudo(8) to ensure full access to rootfs overlay contents
 
 	eval "xx ${create_tarball:?} ${tarball_fpn_quoted:?} ${tar_opts_ws_delimited_quoted} ${rootfs_overlay_dpn_quoted:?}"
 }
@@ -54,8 +53,7 @@ function extract_from_buildroot_rootfs_overlay_tarball() { # tarball_fpn
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--keep-directory-symlink"
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--delay-directory-restore"
 
-	local extract_from_tarball="tar xf" # must not use sudo(8) so we can run within a fakeroot context
-	#^-- FIXME: probe for fakeroot context, and use sudo(8) unless in fakeroot context
+	local extract_from_tarball="sudo_pass_through tar xf"
 
 	case "${f1:?}" in
 	*.tar.bz2|*.tbz)

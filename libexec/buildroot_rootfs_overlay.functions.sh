@@ -165,15 +165,15 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	if ! [[ -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
 
-		xx sudo mkdir -p "${BR2_DL_ROL_DIR:?}"
-		xx sudo mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
+		xx sudo_pass_through mkdir -p "${BR2_DL_ROL_DIR:?}"
+		xx sudo_pass_through mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
 
 		(
 			trap '
 				buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 			' EXIT
 
-			xx sudo qemu-debootstrap \
+			xx sudo_pass_through qemu-debootstrap \
 				--verbose \
 				--merged-usr \
 				--log-extra-deps \
@@ -206,9 +206,9 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	xx :
 
-	(xx sudo find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
+	(xx sudo_pass_through find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
 
-	while read -r x1 ; do xx sudo rm -rf "${x1:?}" ; done
+	while read -r x1 ; do xx sudo_pass_through rm -rf "${x1:?}" ; done
 
 	#^-- empty contents of /var/cache
 
@@ -216,11 +216,11 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	xx :
 
-	xx sudo rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/hostname
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/hostname
 
-	xx sudo rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/ld.so.cache
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/ld.so.cache
 
-	xx sudo rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/resolv.conf
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/resolv.conf
 
 	#^-- ensure the rootfs overlay does not contain build host details
 
@@ -266,7 +266,7 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		[ -e "${x1:?}" ] || continue
 
-		xx sudo rm -rf "${x1:?}"
+		xx sudo_pass_through rm -rf "${x1:?}"
 	done
 
 	case ": ${@} :" in
@@ -282,8 +282,8 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${d1:?}"
 
-		sudo find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
-		while read -r x1 ; do xx sudo rm -rf "${x1:?}" ; done
+		sudo_pass_through find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
+		while read -r x1 ; do xx sudo_pass_through rm -rf "${x1:?}" ; done
 	done
 }
 
@@ -401,7 +401,7 @@ function buildroot_rootfs_overlay_util_ensure_no_mount_points_below() { # rootfs
 
 	list_mount_points_below "${rootfs_overlay_dpn:?}" |
 
-	while read -r d1 ; do xx sudo umount "${d1:?}" ; done
+	while read -r d1 ; do xx sudo_pass_through umount "${d1:?}" ; done
 }
 
 ##

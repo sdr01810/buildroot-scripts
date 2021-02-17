@@ -204,21 +204,21 @@ function buildroot_trip_test_run_1() { # [state]
 		xx rm -rf buildroot
 
 		expect_xc 0 buildroot.sh >&- install --everything
-		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)"
+		expect_xc 0 test -d buildroot -a -n "$(sudo_pass_through which debootstrap)"
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
 		expect_xc 0 buildroot.sh >&- install --dependencies-only
-		expect_xc 0 test ! -d buildroot -a -n "$(sudo which debootstrap)"
+		expect_xc 0 test ! -d buildroot -a -n "$(sudo_pass_through which debootstrap)"
 
 		xx :
 		xx rm -rf buildroot*.tar.gz
 		xx rm -rf buildroot
 
 		expect_xc 0 buildroot.sh >&- install
-		expect_xc 0 test -d buildroot -a -n "$(sudo which debootstrap)"
+		expect_xc 0 test -d buildroot -a -n "$(sudo_pass_through which debootstrap)"
 		;;
 
 	30|start.config.xctc)
@@ -347,14 +347,14 @@ function buildroot_trip_test_run_1() { # [state]
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
 		xx :
-		xx sudo rm -rf buildroot-output-rol
+		xx sudo_pass_through rm -rf buildroot-output-rol
 
 		expect_xc 0 buildroot.sh >&- rootfs-overlay --build
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
 		expect_xc 0 test -d buildroot-output-rol/debootstrap -a -s buildroot-output-rol.tar
 
 		xx :
-		xx sudo rm -rf buildroot-output-rol.tar
+		xx sudo_pass_through rm -rf buildroot-output-rol.tar
 
 		expect_xc 0 buildroot.sh >&- rootfs-overlay --build
 		expect_xc 0 test -d buildroot-dl-rol -a -d buildroot-output-rol -a -d buildroot-output-main
@@ -439,14 +439,14 @@ function buildroot_trip_test_run_1() { # [state]
 
 				xx :
 
-				xx sudo rsync -a --delete "${d1:?}"{,.~lkg~}/ # lkg == last known good
+				xx sudo_pass_through rsync -a --delete "${d1:?}"{,.~lkg~}/ # lkg == last known good
 			done
 
 			for f1 in buildroot-output-rol.tar ; do
 
 				xx :
 
-				xx sudo rsync -a --delete "${f1:?}"{,.~lkg~} # lkg == last known good
+				xx sudo_pass_through rsync -a --delete "${f1:?}"{,.~lkg~} # lkg == last known good
 			done
 		fi
 		;;
@@ -531,11 +531,11 @@ function buildroot_trip_test_run_1() { # [state]
 function buildroot_trip_test_clean() { #
 
 	xx :
-	xx sudo rm -rf buildroot-output-rol.tar
-	xx sudo rm -rf buildroot-output-rol
+	xx sudo_pass_through rm -rf buildroot-output-rol.tar
+	xx sudo_pass_through rm -rf buildroot-output-rol
 
 	xx :
-	xx sudo rm -rf buildroot-dl-rol
+	xx sudo_pass_through rm -rf buildroot-dl-rol
 
 	xx :
 	xx rm -rf buildroot-output-main
