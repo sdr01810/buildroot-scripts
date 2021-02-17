@@ -1,5 +1,4 @@
-##/bin/bash
-## Provides function xx() and friends.
+#!/bin/bash sourced
 ## 
 
 [ -z "$xx_functions_p" ] || return 0
@@ -36,7 +35,7 @@ function xx_lod() { # this_lod ...
 ## to 0; and if you want it only at higher levels of detail, set it to the
 ## desired threshold.
 ##
-	local default_lod="1" ; local this_lod="${1:-${default_lod:?}}" ; shift 1
+	local default_lod="1" ; local this_lod=${1:-${default_lod:?}} ; shift 1
 
 	if [ "${XX_LOD_THRESHOLD:-${default_lod:?}}" -ge "${this_lod:?}" ] ; then
 

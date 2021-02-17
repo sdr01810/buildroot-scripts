@@ -12,7 +12,19 @@ install_package_debug_p=
 
 function install_package() { # [package_name...]
 
-	[ $# -eq 0 ] ||
+	if [ $# -gt 0 ] ; then
+	(
+		## for environment variable settings:
+		## <https://wiki.debian.org/Multistrap/Environment>
 
-	(set -x ; sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes install "$@")
+		export DEBCONF_NONINTERACTIVE_SEEN=true
+		export DEBIAN_FRONTEND=noninteractive
+
+		export LC_ALL=C LANGUAGE=C LANG=C
+
+		set -x
+
+		sudo_pass_through apt-get --quiet --yes install "$@"
+	)
+	fi
 }

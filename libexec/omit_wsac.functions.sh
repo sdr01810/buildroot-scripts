@@ -12,10 +12,6 @@ omit_wsac_debug_p=
 
 function omit_wsac() { # args like cat(1)
 
-	cat "$@" | perl -ne '
-
-		s{\s*[#].*$} {} ;
-
-		print unless m{^\s*$} ;
-	';
+	cat "$@" | (egrep -v '^\s*(#|$)' || :)
 }
+
