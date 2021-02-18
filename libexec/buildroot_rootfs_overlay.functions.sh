@@ -127,37 +127,12 @@ function buildroot_rootfs_overlay() { # ...
 
 function buildroot_rootfs_overlay_build() { # [--download-only]
 
-	local action_args=( "$@" )
-	shift $#
+	local action_args=( "$@" ) ; shift $#
 
 	if [[ ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED:?} == n ]] ; then
 
 		return 0
 	fi
-
-	local package_inclusion_list_comma_separated="$(
-		eval "file_contents_as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_FILE_LIST//,/ }"
-	)"
-
-	local package_exclusion_list_comma_separated="$(
-		eval "file_contents_as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_EXCLUSION_FILE_LIST//,/ }"
-	)"
-
-	package_inclusion_list_comma_separated+="${package_inclusion_list_comma_separated:+","}$(
-		eval "as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_LIST//,/ }"
-	)"
-
-	local package_exclusion_list_comma_separated+="${package_exclusion_list_comma_separated:+","}$(
-		eval "as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_EXCLUSION_LIST//,/ }"
-	)"
-
-	: "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?missing value for BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH}"
-
-	local arch="$(as_debian_arch "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?}")"
-	#^-- by design: transparently map buildroot BR2_ARCH/KERNEL_ARCH/ARCH values to Debian values
-
-	local variant="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT}"
-	case "${variant}" in standard) variant="" ;; esac
 
 	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 
@@ -175,25 +150,12 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 			xx mkdir -p "${d1:?}"
 		done
 
-		(
-			trap '
-				buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
-			' EXIT
+		"${FUNCNAME:?}"__debootstrap "${action_args[@]}"
 
-			xx sudo_pass_through qemu-debootstrap \
-				--verbose \
-				--merged-usr \
-				--log-extra-deps \
-				--keep-debootstrap-dir \
-				--arch="${arch:?}" \
-				${variant:+--variant="${variant:?}"} \
-				${package_inclusion_list_comma_separated:+--include="${package_inclusion_list_comma_separated:?}"} \
-				${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"} \
-				--cache-dir="${BR2_DL_ROL_DIR:?}" \
-				"${action_args[@]}" "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+		#^-- the resulting rootfs overlay is a true chroot space...
+		#^-- with files that are root-only accessible and/or setuid
 
-			#^-- NB: the rootfs overlay is a true chroot space w/ files that are root-only accessible and/or setuid
-		)
+		# ensure the rootfs overlay is owned by invoking (usually non-root) user:
 
 		local uid gid
 		uid=$(sudo_pass_through_real_uid)
@@ -206,8 +168,6 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 				xx sudo_pass_through chown -R "${uid:?}:${gid:?}" "${d1:?}"
 			done
 		fi
-
-		##
 
 		did_just_create_rol_output_dir_p=t
 		did_just_create_rol_dl_dir_p=t
@@ -289,6 +249,65 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	assert_that [ -e "${BR2_OUTPUT_ROL_DIR:?}.tar" ]
 	return $?
+}
+
+function buildroot_rootfs_overlay_build__debootstrap() {( # ...
+
+	local package_inclusion_list_comma_separated="$(
+		eval "file_contents_as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_FILE_LIST//,/ }"
+	)"
+
+	local package_exclusion_list_comma_separated="$(
+		eval "file_contents_as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_EXCLUSION_FILE_LIST//,/ }"
+	)"
+
+	package_inclusion_list_comma_separated+="${package_inclusion_list_comma_separated:+","}$(
+		eval "as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_LIST//,/ }"
+	)"
+
+	local package_exclusion_list_comma_separated+="${package_exclusion_list_comma_separated:+","}$(
+		eval "as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_EXCLUSION_LIST//,/ }"
+	)"
+
+	: "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?missing value for BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH}"
+
+	local arch="$(as_debian_arch "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?}")"
+	#^-- by design: transparently map buildroot BR2_ARCH/KERNEL_ARCH/ARCH values to Debian values
+
+	: "${arch:?invalid rootfs overlay debootstrap architecture spec: ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?}}"
+
+	local variant="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT}"
+	case "${variant}" in standard) variant="" ;; esac
+
+	local options=(
+
+		--verbose
+
+		--merged-usr
+
+		--log-extra-deps
+
+		--keep-debootstrap-dir
+
+		${arch:+--arch="${arch:?}"}
+
+		${variant:+--variant="${variant:?}"}
+
+		${package_inclusion_list_comma_separated:+--include="${package_inclusion_list_comma_separated:?}"}
+		${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"}
+
+		--cache-dir="${BR2_DL_ROL_DIR:?}"
+	)
+
+	trap "${FUNCNAME:?}"__finalize EXIT
+
+	xx sudo_pass_through qemu-debootstrap "${options[@]}" "$@" \
+		"${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+)}
+
+function buildroot_rootfs_overlay_build__debootstrap__finalize() { # ...
+
+	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 }
 
 function buildroot_rootfs_overlay_clean() { # [--tarball-only]
