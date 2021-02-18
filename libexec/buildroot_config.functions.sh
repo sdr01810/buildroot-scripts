@@ -102,16 +102,16 @@ function cat_buildroot_config_quoted() { # [ --output-xctc | --output-main | --o
 	fi
 }
 
-function list_buildroot_config_variable_bindings() { # [ --env-filter { none | omit | only } ]
+function list_buildroot_config_variable_bindings() { # [ --env-omit | --env-only | --env-too }
 
-	local env_filter_mode=none
+	local env_selection_mode=too
 
 	while [[ ${#} -gt 0 ]] ; do
 	case "${1}" in
-	--env-filter)
-		env_filter_mode=${2:?missing value for env_filter_mode}
+	--env-omit|--env-only|--env-too)
+		env_selection_mode=${1#--env-}
 
-		shift 2
+		shift 1
 		;;
 	--)
 		shift 1
@@ -134,18 +134,18 @@ function list_buildroot_config_variable_bindings() { # [ --env-filter { none | o
 
 	(egrep -v '^HOST(NAME|TYPE)=' || :) | #<-- defined by bash, not buildroot
 
-	case "${env_filter_mode:?}" in
-	none)
-		cat
-		;;
+	case "${env_selection_mode:?}" in
 	omit)
 		(egrep -v '^BR2_ENV' || :)
 		;;
 	only)
 		(egrep '^BR2_ENV' || :)
 		;;
+	too)
+		cat
+		;;
 	*)
-		echo 1>&2 "${FUNCNAME:?}: unrecognized env_filter_mode: ${1}"
+		echo 1>&2 "${FUNCNAME:?}: unrecognized env_selection_mode: ${1}"
 		return 2
 		;;
 	esac |
@@ -153,7 +153,7 @@ function list_buildroot_config_variable_bindings() { # [ --env-filter { none | o
 	sort
 }
 
-function list_buildroot_config_variable_names_defined() { # [ --env-filter { none | omit | only } ]
+function list_buildroot_config_variable_names_defined() { # [ --env-omit | --env-only | --env-too }
 
 	list_buildroot_config_variable_bindings "$@" | sed -e 's/=.*//'
 }
@@ -345,7 +345,7 @@ function load_buildroot_config__defaults__rootfs_overlay() {
 
 function load_buildroot_config__overlay_br2_env_onto_br2() {
 
-	local br2_env_variable_names=( $(list_buildroot_config_variable_names_defined --env-filter only) )
+	local br2_env_variable_names=( $(list_buildroot_config_variable_names_defined --env-only) )
 	local br2_env_variable_name
 
 	for br2_env_variable_name in "${br2_env_variable_names[@]}" ; do
