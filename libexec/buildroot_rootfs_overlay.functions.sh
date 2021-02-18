@@ -154,7 +154,7 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	: "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?missing value for BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH}"
 
 	local arch="$(as_debian_arch "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_ARCH:?}")"
-	#^-- goal: transparently map buildroot BR2_ARCH/KERNEL_ARCH/ARCH values to Debian values
+	#^-- by design: transparently map buildroot BR2_ARCH/KERNEL_ARCH/ARCH values to Debian values
 
 	local variant="${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_VARIANT}"
 	case "${variant}" in standard) variant="" ;; esac
@@ -191,12 +191,9 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 				${package_exclusion_list_comma_separated:+--exclude="${package_exclusion_list_comma_separated:?}"} \
 				--cache-dir="${BR2_DL_ROL_DIR:?}" \
 				"${action_args[@]}" "${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+
+			#^-- NB: the rootfs overlay is a true chroot space w/ files that are root-only accessible and/or setuid
 		)
-		#^-- NB: the rootfs overlay has files and directories that are not accessible to a non-root user
-
-		#^-- NB: the rootfs overlay has files (programs) that are setuid root
-
-		##
 
 		local uid gid
 		uid=$(sudo_pass_through_real_uid)
@@ -435,7 +432,7 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot__setup_specified_users(
 
 function buildroot_rootfs_overlay_util_ensure_no_mount_points_below() { # rootfs_overlay_dpn
 
-	local rootfs_overlay_dpn=${1:?missing value for rootfs_overlay_dpn} ; shift 1	
+	local rootfs_overlay_dpn=${1:?missing value for rootfs_overlay_dpn} ; shift 1
 
 	list_mount_points_below "${rootfs_overlay_dpn:?}" |
 
