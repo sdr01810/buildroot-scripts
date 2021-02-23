@@ -390,7 +390,8 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot() { # [target_rootfs_dp
 
 	if [[ -n ${buildroot_rootfs_overlay_debug_p} ]] ; then
 
-		xx : "${FUNCNAME:?}: rc = ${rc:?}"
+		echo 1>&2
+		echo 1>&2 "${FUNCNAME:?}: rc = ${rc:?}"
 	fi
 
         return ${rc:?}
@@ -416,9 +417,10 @@ function buildroot_rootfs_overlay_run_hook_post_fakeroot__extract_overlay() {
 		done
 	done
 
-	if [ -n "${buildroot_rootfs_overlay_debug_p}" ] ; then
+	if [[ -n ${buildroot_rootfs_overlay_debug_p} ]] ; then
 
-		xx : "${FUNCNAME:?}: tar_rc = ${tar_rc:?}"
+		echo 1>&2
+		echo 1>&2 "${FUNCNAME:?}: tar_rc = ${tar_rc:?}"
 	fi
 
 	[ ${tar_rc:?} -eq 0 ]
