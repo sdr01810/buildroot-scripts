@@ -196,9 +196,11 @@ function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-
 
 	load_buildroot_config__overlay_br2_env_onto_br2
 
-	if [ -n "${buildroot_config_debug_p}" ] ; then
+	if [[ -n ${buildroot_config_debug_p} ]] ; then
 
+		echo 1>&2
 		echo 1>&2 "${FUNCNAME:?}: buildroot config follows:"
+		echo 1>&2
 
 		(print_buildroot_config | perl -pe 's#^#    #') 1>&2
 	fi
@@ -335,9 +337,11 @@ function load_buildroot_config__defaults__rootfs_overlay() {
 
 	##
 
-	if [ -n "${buildroot_rootfs_overlay_debug_p}" ] ; then
+	if [[ -n ${buildroot_config_debug_p} ]] ; then
 
+		echo 1>&2
 		echo 1>&2 "${FUNCNAME:?}: buildroot config follows:"
+		echo 1>&2
 
 		(print_buildroot_config | perl -pe 's#^#    #') 1>&2
 	fi
