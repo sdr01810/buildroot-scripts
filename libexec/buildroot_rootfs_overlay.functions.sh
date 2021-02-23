@@ -187,11 +187,16 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 
 	##
 
-	xx :
+	(find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
 
-	(xx find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
+	while read -r x1 ; do
 
-	while read -r x1 ; do xx rm -rf "${x1:?}" ; done
+		[[ ${iter_count:=0} -gt 0 ]] || xx :
+	
+		xx rm -rf "${x1:?}"
+
+		((++ iter_count))
+	done
 
 	#^-- empty contents of /var/cache
 
@@ -318,6 +323,8 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		[ -e "${x1:?}" ] || continue
 
+		xx :
+
 		xx rm -rf "${x1:?}"
 	done
 
@@ -334,8 +341,16 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 		buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${d1:?}"
 
-		find -H "${d1:?}" -mindepth 1 -maxdepth 1 |
-		while read -r x1 ; do xx rm -rf "${x1:?}" ; done
+		(find -H "${d1:?}" -mindepth 1 -maxdepth 1 || :) |
+
+		while read -r x1 ; do
+
+			[[ ${iter_count:=0} -gt 0 ]] || xx :
+
+			xx rm -rf "${x1:?}"
+
+			((++ iter_count))
+		done
 	done
 }
 
