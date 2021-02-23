@@ -53,7 +53,7 @@ function file_contents_as_list_with_separator() { # separator [file_pn ...]
 
 		local f1_contents_as_list="$(as_list_with_separator "${separator:?}" "${f1_contents_as_list_fragments[@]}")"
 
-		result="${result:+${result:?}${separator:?}}${f1_contents_as_list:?}"
+		result="${result:+${result:?}${separator:?}}${f1_contents_as_list}"
 	done
 
 	echo "${result}"
