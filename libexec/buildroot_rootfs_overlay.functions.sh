@@ -280,6 +280,46 @@ function buildroot_rootfs_overlay_build__debootstrap() { # ...
 
 	##
 
+	local suite=${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}
+
+	local dist= archive_url_and_rc_script=()
+
+	case "${suite:?}" in
+	*:*|*:)
+		dist=${suite%%:*} ; suite=${suite#*:}
+
+		if [[ -z ${suite} ]] ; then
+
+			echo 1>&2 "${FUNCNAME:?}: no suite specified; just distribution: ${dist:?}"
+			return 2
+		fi
+		;;
+	*)
+		dist=debian
+		;;
+	esac
+
+	case "${dist:?}" in
+	debian)
+		archive_url_and_rc_script=() # let debootstrap decide
+		#^-- 
+		#^-- stretch and above: archive URL is nominally <http://deb.debian.org/debian>
+		#^-- 
+		#^-- below stretch: archive URL is nominally <http://archive.debian.org/debian>
+		;;
+
+	ubuntu)
+		archive_url_and_rc_script=( http://archive.ubuntu.com/${dist:?} )
+		;;
+
+	*)
+		echo 1>&2 "${FUNCNAME:?}: unrecognized/unsupported distribution: ${dist:?}"
+		return 2
+		;;
+	esac
+
+	##
+
 	(
 		trap "$(printf %q "${FUNCNAME:?}"__finalize_with_trap_type) ERR" ERR
 		trap "$(printf %q "${FUNCNAME:?}"__finalize_with_trap_type) EXIT" EXIT
@@ -288,7 +328,7 @@ function buildroot_rootfs_overlay_build__debootstrap() { # ...
 
 		xx :
 		xx sudo_pass_through qemu-debootstrap "${options[@]}" "$@" \
-			"${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+			"${suite:?}" "${BR2_OUTPUT_ROL_DIR:?}" "${archive_url_and_rc_script[@]}"
 	)
 }
 
