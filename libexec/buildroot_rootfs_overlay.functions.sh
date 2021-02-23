@@ -134,40 +134,14 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 		return 0
 	fi
 
-	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
-
 	local rol_dl_and_output_dirs=( "${BR2_DL_ROL_DIR:?}" "${BR2_OUTPUT_ROL_DIR:?}" )
 
 	local did_just_create_rol_output_dir_p=
 	local did_just_create_rol_dl_dir_p=
 
-	local d1
-
 	if ! [[ -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
 
-		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
-
-			xx mkdir -p "${d1:?}"
-		done
-
 		"${FUNCNAME:?}"__debootstrap "${action_args[@]}"
-
-		#^-- the resulting rootfs overlay is a true chroot space...
-		#^-- with files that are root-only accessible and/or setuid
-
-		# ensure the rootfs overlay is owned by invoking (usually non-root) user:
-
-		local uid gid
-		uid=$(sudo_pass_through_real_uid)
-		gid=$(sudo_pass_through_real_gid)
-
-		if [[ ${uid:?} -ne 0 || ${gid:?} -ne 0 ]] ; then
-
-			for d1 in "${rol_dl_and_output_dirs[@]}" ; do
-
-				xx sudo_pass_through chown -R "${uid:?}:${gid:?}" "${d1:?}"
-			done
-		fi
 
 		did_just_create_rol_output_dir_p=t
 		did_just_create_rol_dl_dir_p=t
@@ -256,7 +230,7 @@ function buildroot_rootfs_overlay_build() { # [--download-only]
 	return $?
 }
 
-function buildroot_rootfs_overlay_build__debootstrap() {( # ...
+function buildroot_rootfs_overlay_build__debootstrap() { # ...
 
 	local package_inclusion_list_comma_separated="$(
 		eval "file_contents_as_list_with_separator "," ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_PACKAGE_INCLUSION_FILE_LIST//,/ }"
@@ -304,15 +278,63 @@ function buildroot_rootfs_overlay_build__debootstrap() {( # ...
 		--cache-dir="${BR2_DL_ROL_DIR:?}"
 	)
 
-	trap "${FUNCNAME:?}"__finalize EXIT
+	##
 
-	xx sudo_pass_through qemu-debootstrap "${options[@]}" "$@" \
-		"${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
-)}
+	(
+		trap "$(printf %q "${FUNCNAME:?}"__finalize_with_trap_type) ERR" ERR
+		trap "$(printf %q "${FUNCNAME:?}"__finalize_with_trap_type) EXIT" EXIT
 
-function buildroot_rootfs_overlay_build__debootstrap__finalize() { # ...
+		"${FUNCNAME:?}"__prepare
+
+		xx :
+		xx sudo_pass_through qemu-debootstrap "${options[@]}" "$@" \
+			"${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_SUITE:?}" "${BR2_OUTPUT_ROL_DIR:?}"
+	)
+}
+
+function buildroot_rootfs_overlay_build__debootstrap__prepare() { #
+
+	local d1
 
 	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
+	#^-- sidestep bug in debootstrap(8): on failure, it can leave mount points behind
+
+	for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+
+		xx :
+		xx mkdir -p "${d1:?}"
+	done
+}
+
+function buildroot_rootfs_overlay_build__debootstrap__finalize_with_trap_type() { # trap_type
+
+	local trap_type=${1:?missing value for trap_type} ; shift 1
+
+	if [[ -n ${buildroot_rootfs_overlay_debug_p} ]] ; then
+
+		echo 1>&2 ""
+		echo 1>&2 "Finalizing debootstrap; trap type: ${trap_type}..."
+	fi
+
+	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
+	#^-- sidestep bug in debootstrap(8): on failure, it can leave mount points behind
+
+	local uid gid
+	uid=$(sudo_pass_through_real_uid)
+	gid=$(sudo_pass_through_real_gid)
+
+	if [[ ${uid:?} -ne 0 || ${gid:?} -ne 0 ]] ; then
+
+		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+
+			[ -e "${d1}" ] || continue
+
+			xx :
+			xx sudo_pass_through chown -R "${uid:?}:${gid:?}" "${d1:?}"
+
+			#^-- ensure owner is the invoking (usually non-root) user
+		done
+	fi
 }
 
 function buildroot_rootfs_overlay_clean() { # [--tarball-only]
@@ -472,7 +494,14 @@ function buildroot_rootfs_overlay_util_ensure_no_mount_points_below() { # rootfs
 
 	list_mount_points_below "${rootfs_overlay_dpn:?}" |
 
-	while read -r d1 ; do xx sudo_pass_through umount "${d1:?}" ; done
+	while read -r d1 ; do
+
+		while mountpoint -q "${d1:?}" ; do
+
+			xx :
+			xx sudo_pass_through umount "${d1:?}"
+		done
+	done
 }
 
 ##
