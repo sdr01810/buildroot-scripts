@@ -10,15 +10,46 @@ buildroot_rootfs_overlay_tarball_debug_p=
 
 ##
 
+function create_ownership_maps_for_buildroot_rootfs_overlay() { # rootfs_overlay_dpn extra_root_uid extra_root_gid
+
+	local rootfs_overlay_dpn="${1:?missing value for rootfs_overlay_dpn}" ; shift 1
+
+	local extra_root_uid=${1:?missing value for extra_root_uid} ; shift 1
+
+	local extra_root_gid=${1:?missing value for extra_root_gid} ; shift 1
+
+	local rootfs_overlay_owner_map_fpn="${rootfs_overlay_dpn:?}".owner-map.txt
+
+	local rootfs_overlay_group_map_fpn="${rootfs_overlay_dpn:?}".group-map.txt
+
+	local root_uid=0 root_gid=0
+
+	xx :
+	xx echo "+${extra_root_uid:?} +${root_uid:?}" |
+	xx cp /dev/stdin "${rootfs_overlay_owner_map_fpn:?}"
+
+	xx :
+	xx echo "+${extra_root_gid:?} +${root_gid:?}" |
+	xx cp /dev/stdin "${rootfs_overlay_group_map_fpn:?}"
+
+	#^-- see GNU tar(1) for layout/meaning
+}
+
 function create_buildroot_rootfs_overlay_tarball() { # tarball_fpn rootfs_overlay_dpn
 
-	local create_tarball="tar cf"
+	local create_tarball="sudo_pass_through tar cf"
 
 	local tarball_fpn="${1:?missing value for tarball_fpn}" ; shift 1
 	local tarball_fpn_quoted="$(printf %q "${tarball_fpn:?}")"
 
 	local rootfs_overlay_dpn="${1:?missing value for rootfs_overlay_dpn}" ; shift 1
 	local rootfs_overlay_dpn_quoted="$(printf %q "${rootfs_overlay_dpn:?}")"
+
+	local rootfs_overlay_owner_map_fpn="${rootfs_overlay_dpn:?}".owner-map.txt
+	local rootfs_overlay_owner_map_fpn_quoted="$(printf %q "${rootfs_overlay_owner_map_fpn:?}")"
+
+	local rootfs_overlay_group_map_fpn="${rootfs_overlay_dpn:?}".group-map.txt
+	local rootfs_overlay_group_map_fpn_quoted="$(printf %q "${rootfs_overlay_group_map_fpn:?}")"
 
 	local tar_opts_ws_delimited_quoted="${BR2_ROOTFS_OVERLAY_TAR_EXCLUSION_OPTS:-}"
 
@@ -28,12 +59,18 @@ function create_buildroot_rootfs_overlay_tarball() { # tarball_fpn rootfs_overla
 
 	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--sparse"
 
-	eval "xx ${create_tarball:?} ${tarball_fpn_quoted:?} ${tar_opts_ws_delimited_quoted} ${rootfs_overlay_dpn_quoted:?}"
+	! [[ -e "${rootfs_overlay_owner_map_fpn:?}" ]] ||
+	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--owner-map=${rootfs_overlay_owner_map_fpn_quoted:?}"
+
+	! [[ -e "${rootfs_overlay_group_map_fpn:?}" ]] ||
+	tar_opts_ws_delimited_quoted+="${tar_opts_ws_delimited_quoted:+ }--group-map=${rootfs_overlay_group_map_fpn_quoted:?}"
+
+	eval "xx : && xx ${create_tarball:?} ${tarball_fpn_quoted:?} ${tar_opts_ws_delimited_quoted} ${rootfs_overlay_dpn_quoted:?}"
 }
 
 function extract_from_buildroot_rootfs_overlay_tarball() { # tarball_fpn
 
-	local extract_from_tarball="tar xf"
+	local extract_from_tarball="sudo_pass_through tar xf"
 
 	local tarball_fpn="${1:?missing value for tarball_fpn}" ; shift 1
 	local tarball_fpn_quoted="$(printf %q "${tarball_fpn:?}")"
@@ -66,8 +103,6 @@ function extract_from_buildroot_rootfs_overlay_tarball() { # tarball_fpn
 	esac
 	#^-- TODO: use file(1) to determine tarball type
 
-	xx :
-
-	eval "xx ${extract_from_tarball:?} ${tarball_fpn_quoted:?} ${tar_opts_ws_delimited_quoted:?}"
+	eval "xx : && xx ${extract_from_tarball:?} ${tarball_fpn_quoted:?} ${tar_opts_ws_delimited_quoted:?}"
 }
 

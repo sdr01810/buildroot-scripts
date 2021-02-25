@@ -359,20 +359,28 @@ function buildroot_rootfs_overlay_build__debootstrap__finalize_with_trap_type() 
 	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 	#^-- sidestep bug in debootstrap(8): on failure, it can leave mount points behind
 
-	local uid gid
-	uid=$(sudo_pass_through_real_uid)
-	gid=$(sudo_pass_through_real_gid)
+	local invoking_uid invoking_gid root_uid=0 root_gid=0
+	invoking_uid=$(sudo_pass_through_real_uid)
+	invoking_gid=$(sudo_pass_through_real_gid)
 
-	if [[ ${uid:?} -ne 0 || ${gid:?} -ne 0 ]] ; then
+	if [[ ${invoking_uid:?} -ne 0 || ${invoking_gid:?} -ne 0 ]] ; then
 
 		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
 
-			[ -e "${d1}" ] || continue
+			[[ -e ${d1} ]] || continue
 
 			xx :
-			xx sudo_pass_through chown -R "${uid:?}:${gid:?}" "${d1:?}"
+			xx sudo_pass_through find -H "${d1:?}" -depth -uid "${root_uid:?}" -exec chown -h "${invoking_uid:?}" {} \;
+			xx sudo_pass_through find -H "${d1:?}" -depth -gid "${root_gid:?}" -exec chgrp -h "${invoking_gid:?}" {} \;
 
 			#^-- ensure owner is the invoking (usually non-root) user
+		done
+
+		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+
+			[[ -e ${d1} && ${d1} == ${BR2_OUTPUT_ROL_DIR} ]] || continue
+
+			create_ownership_maps_for_buildroot_rootfs_overlay "${d1:?}" "${invoking_uid:?}" "${invoking_gid:?}"
 		done
 	fi
 }
