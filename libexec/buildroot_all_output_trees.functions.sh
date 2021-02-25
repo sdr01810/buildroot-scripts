@@ -118,14 +118,14 @@ function resolve_buildroot_defconfig_for() { # output_selector defconfig_fbn [ d
 
 	##
 
-	local result=${defconfig_fbn}
+	local result=${defconfig_fbn:?}
 
 	if [[ ${result:?} =~ ^(:infer:${output_selector:?})$ ]] ; then
 
 		result=$(best_defconfig_fbn_hint_for "${output_selector:?}" "${defconfig_fbn_hint}")
 	fi
 
-	if [[ ${result:?} =~ ^(:skip:${output_selector:?})$ ]] ; then
+	if [[ ${result} =~ ^(:skip:${output_selector:?})$ ]] ; then
 
 		result=
 	fi
@@ -220,6 +220,12 @@ function buildroot_all_output_trees_build() { # [ main_defconfig_fbn [ xctc_defc
 
 	xctc_defconfig_fbn=${1:-:infer:xctc} ; shift 1 || :
 	xctc_defconfig_fbn=$(resolve_buildroot_xctc_defconfig "${xctc_defconfig_fbn:?}" "${main_defconfig_fbn}")
+
+	if ! [[ -n ${main_defconfig_fbn} ]] ; then
+
+		echo 1>&2 "${FUNCNAME:?}: cannot determine defconfig for main build"
+		return 2
+	fi
 
 	local output_selectors=()
 	local output_selector
