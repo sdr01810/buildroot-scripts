@@ -125,109 +125,58 @@ function buildroot_rootfs_overlay() { # ...
 	fi
 }
 
-function buildroot_rootfs_overlay_build() { # [--download-only]
+function buildroot_rootfs_overlay_build() { # [ --[not-]chrootable ] [ --download-only ] [ any_debootstrap_option ... ]
 
-	local action_args=( "$@" ) ; shift $#
+	local download_only_p=
+	local option_chrootable=--chrootable
 
-	if [[ ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED:?} == n ]] ; then
+	local debootstrap_options=()
+	local post_processing_options=()
 
-		return 0
-	fi
-
-	local rol_dl_and_output_dirs=( "${BR2_DL_ROL_DIR:?}" "${BR2_OUTPUT_ROL_DIR:?}" )
-
-	local did_just_create_rol_output_dir_p=
-	local did_just_create_rol_dl_dir_p=
-
-	if ! [[ -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
-
-		"${FUNCNAME:?}"__debootstrap "${action_args[@]}"
-
-		did_just_create_rol_output_dir_p=t
-		did_just_create_rol_dl_dir_p=t
-	fi
-
-	case ": ${action_args[@]} :" in
-	*" --download-only "*)
-
-		return $?
+	while [[ $# -gt 0 ]] ; do case "${1}" in
+	--chrootable)
+		option_chrootable=${1:?}
+		shift 1
 		;;
-	esac
+	--not-chrootable)
+		option_chrootable=${1:?}
+		shift 1
+		;;
+	--download-only)
+		debootstrap_options+=( "${1}" )
+		download_only_p=t
+		shift 1
+		;;
+	--)
+		shift 1
+		break
+		;;
+	*|'')
+		debootstrap_options+=( "${1}" )
+		shift 1
+		;;
+	esac;done
 
-	if [[ -e ${BR2_OUTPUT_ROL_DIR:?}.tar && ! -n ${did_just_create_rol_output_dir_p} ]] ; then
+	debootstrap_options+=( "$@" ) ; shift $#
+
+	post_processing_options+=( ${option_chrootable:?} )
+
+	if [[ ${BR2_ROOTFS_OVERLAY_DEBOOTSTRAP_IS_ENABLED,,?} == n ]] ; then
 
 		return 0
 	fi
 
-	##
+	if [[ ! -e ${BR2_OUTPUT_ROL_DIR:?}/debootstrap ]] ; then
 
-	(find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
+		"${FUNCNAME:?}"__debootstrap "${debootstrap_options[@]}"
 
-	while read -r x1 ; do
+		post_processing_options+=( --did-just-create-rootfs-overlay )
+	fi
 
-		[[ ${iter_count:=0} -gt 0 ]] || xx :
-	
-		xx rm -rf "${x1:?}"
+	if [[ ! -n ${download_only_p} ]] ; then
 
-		((++ iter_count))
-	done
-
-	#^-- empty contents of /var/cache
-
-	##
-
-	xx :
-
-	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/hostname
-
-	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/ld.so.cache
-
-	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/resolv.conf
-
-	#^-- ensure the rootfs overlay does not contain build host details
-
-	##
-
-	xx :
-
-	xx rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/machine-id
-
-	#^-- ensure the rootfs overlay does not contain instance-specific data
-	#^-- by design: each rootfs overlay needs to support multiple uses/instances
-
-	##
-
-	xx :
-
-	xx rm -f "${BR2_OUTPUT_ROL_DIR:?}"/etc/.*.lock
-
-	#^-- remove etc/ lock files (cf. vipw(8) and friends)
-
-	##
-
-	xx :
-
-	xx rm -f "${BR2_OUTPUT_ROL_DIR:?}"/root/.*history
-
-	#^-- remove interactive history files for user root
-
-	##
-
-	local d1 b1
-
-	for d1 in "$(dirname "${BR2_OUTPUT_ROL_DIR:?}")" ; do
-	for b1 in "$(basename "${BR2_OUTPUT_ROL_DIR:?}")" ; do
-	(
-		xx :
-
-		xx cd "${d1:?}"
-
-		create_buildroot_rootfs_overlay_tarball "${b1:?}.tar" "${b1:?}"
-	)
-	done;done
-
-	assert_that [ -e "${BR2_OUTPUT_ROL_DIR:?}.tar" ]
-	return $?
+		"${FUNCNAME:?}"__post_process "${post_processing_options[@]}"
+	fi
 }
 
 function buildroot_rootfs_overlay_build__debootstrap() { # ...
@@ -334,16 +283,16 @@ function buildroot_rootfs_overlay_build__debootstrap() { # ...
 
 function buildroot_rootfs_overlay_build__debootstrap__prepare() { #
 
-	local d1
-
 	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 	#^-- sidestep bug in debootstrap(8): on failure, it can leave mount points behind
 
-	for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+	xx :
 
-		xx :
-		xx mkdir -p "${d1:?}"
-	done
+	xx mkdir -p "${BR2_DL_ROL_DIR:?}"
+
+	xx :
+
+	xx mkdir -p "${BR2_OUTPUT_ROL_DIR:?}"
 }
 
 function buildroot_rootfs_overlay_build__debootstrap__finalize_with_trap_type() { # trap_type
@@ -352,37 +301,187 @@ function buildroot_rootfs_overlay_build__debootstrap__finalize_with_trap_type() 
 
 	if [[ -n ${buildroot_rootfs_overlay_debug_p} ]] ; then
 
-		echo 1>&2 ""
-		echo 1>&2 "Finalizing debootstrap; trap type: ${trap_type}..."
+		echo 1>&2
+		echo 1>&2 "Finalizing debootstrap; trap type: ${trap_type} ..."
 	fi
 
 	buildroot_rootfs_overlay_util_ensure_no_mount_points_below "${BR2_OUTPUT_ROL_DIR:?}"
 	#^-- sidestep bug in debootstrap(8): on failure, it can leave mount points behind
 
+	if [[ ${trap_type} == ERR ]] ; then
+
+		echo 1>&2
+		echo 1>&2 "Interrupted/aborted; removing incomplete rootfs overlay ..."
+
+		xx :
+
+		xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"
+	fi
+}
+
+function buildroot_rootfs_overlay_build__post_process() { # [ --[not-]chrootable ] [ --did-[not-]just-create-rootfs-overlay ]
+
+	local chrootable_p=t did_just_create_rootfs_overlay_p=
+
 	local invoking_uid invoking_gid root_uid=0 root_gid=0
 	invoking_uid=$(sudo_pass_through_real_uid)
 	invoking_gid=$(sudo_pass_through_real_gid)
 
-	if [[ ${invoking_uid:?} -ne 0 || ${invoking_gid:?} -ne 0 ]] ; then
+	local d1 b1 x1
 
-		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
+	while [[ $# -gt 0 ]] ; do case "${1}" in
+	--chrootable)
+		chrootable_p=t
+		shift 1
+		;;
+	--not-chrootable)
+		chrootable_p=
+		shift 1
+		;;
+	--did-just-create-rootfs-overlay)
+		did_just_create_rootfs_overlay_p=t
+		shift 1
+		;;
+	--did-not-just-create-rootfs-overlay)
+		did_just_create_rootfs_overlay_p=
+		shift 1
+		;;
+	--)
+		shift 1
+		break
+		;;
+	*|'')
+		echo 1>&2 "${FUNCNAME:?}: unexpected argument(s): ${@}"
+		return 2
+		;;
+	esac;done
+
+	##
+
+	for x1 in cached per_machine ; do
+
+		"${FUNCNAME:?}"__remove_${x1:?}_data
+	done
+
+	if [[ ! -n ${chrootable_p} ]] ; then
+
+		create_ownership_maps_for_buildroot_rootfs_overlay \
+			"${BR2_OUTPUT_ROL_DIR:?}" "${invoking_uid:?}" "${invoking_gid:?}"
+	else
+		create_ownership_maps_for_buildroot_rootfs_overlay \
+			"${BR2_OUTPUT_ROL_DIR:?}" "${root_uid:?}" "${root_gid:?}"
+	fi
+
+	for d1 in "$(dirname "${BR2_OUTPUT_ROL_DIR:?}")" ; do
+	for b1 in "$(basename "${BR2_OUTPUT_ROL_DIR:?}")" ; do
+	(
+		[[ -e ${d1:?} ]] || continue
+
+		xx :
+
+		xx cd "${d1:?}"
+
+		if [[ -n ${did_just_create_rootfs_overlay_p} || ! -e ${b1:?}.tar ]] ; then
+
+			! [[ -e ${b1:?}.tar ]] || (xx : && xx rm -f "${b1:?}.tar")
+
+			create_buildroot_rootfs_overlay_tarball "${b1:?}.tar" "${b1:?}"
+
+			#^-- by design: we create the tarball before changing ownership of the rootfs overlay tree;
+			#^-- this is because changing ownership will clear all setuid/setgid bits; see chown(2)
+
+			[[ ${invoking_uid:?} -ne ${root_uid:?} || ${invoking_gid:?} -ne ${root_gid:?} ]] || continue
+
+			xx : && xx sudo_pass_through chown "${invoking_uid:?}:${invoking_gid:?}" "${b1:?}.tar"
+		fi
+	)
+	done;done
+
+	if [[ ! -n ${chrootable_p} ]] ; then
+
+		for d1 in "${BR2_DL_ROL_DIR:?}" "${BR2_OUTPUT_ROL_DIR:?}" ; do
+
+			[[ ${invoking_uid:?} -ne ${root_uid:?} || ${invoking_gid:?} -ne ${root_gid:?} ]] || continue
 
 			[[ -e ${d1} ]] || continue
 
 			xx :
+
 			xx sudo_pass_through find -H "${d1:?}" -depth -uid "${root_uid:?}" -exec chown -h "${invoking_uid:?}" {} \;
+
 			xx sudo_pass_through find -H "${d1:?}" -depth -gid "${root_gid:?}" -exec chgrp -h "${invoking_gid:?}" {} \;
-
-			#^-- ensure owner is the invoking (usually non-root) user
-		done
-
-		for d1 in "${rol_dl_and_output_dirs[@]}" ; do
-
-			[[ -e ${d1} && ${d1} == ${BR2_OUTPUT_ROL_DIR} ]] || continue
-
-			create_ownership_maps_for_buildroot_rootfs_overlay "${d1:?}" "${invoking_uid:?}" "${invoking_gid:?}"
 		done
 	fi
+
+	assert_that [ -s "${BR2_OUTPUT_ROL_DIR:?}.tar" ]
+}
+
+function buildroot_rootfs_overlay_build__post_process__remove_cached_data() { #
+
+	(find "${BR2_OUTPUT_ROL_DIR:?}"/var/cache -mindepth 1 -maxdepth 1 2>&- || :) |
+
+	while read -r x1 ; do
+
+		[[ ${iter_count:=0} -gt 0 ]] || xx :
+
+		xx sudo_pass_through rm -rf "${x1:?}"
+
+		((++ iter_count))
+	done
+
+	#^-- empty contents of /var/cache
+}
+
+function buildroot_rootfs_overlay_build__post_process__remove_per_machine_data() { #
+
+	xx :
+
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/hostname
+
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/resolv.conf
+
+	#^-- remove data that is specific to the build host
+
+	##
+
+	xx :
+
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/ld.so.cache
+
+	xx sudo_pass_through rm -rf "${BR2_OUTPUT_ROL_DIR:?}"/etc/machine-id
+
+	#^-- remove data that is specific to each machine instantiation
+
+	##
+
+	local x1
+
+	for x1 in "${BR2_OUTPUT_ROL_DIR:?}"/etc/.*.lock ; do
+
+		[[ -e ${x1:?} ]] || continue
+
+		xx :
+
+		xx sudo_pass_through rm -rf "${x1:?}"
+
+	done
+
+	#^-- remove /etc lock files used by vipw(8) and friends
+
+	##
+
+	local x1
+
+	for x1 in "${BR2_OUTPUT_ROL_DIR:?}"/{root,home/*}/.*history ; do
+
+		[[ -e ${x1:?} ]] || continue
+
+		xx :
+
+		xx sudo_pass_through rm -rf "${x1:?}"
+	done
+
+	#^-- remove interactive history files that are specific to each user
 }
 
 function buildroot_rootfs_overlay_clean() { # [--tarball-only]
@@ -417,7 +516,7 @@ function buildroot_rootfs_overlay_clean() { # [--tarball-only]
 
 			[[ ${iter_count:=0} -gt 0 ]] || xx :
 
-			xx rm -rf "${x1:?}"
+			xx sudo_pass_through rm -rf "${x1:?}"
 
 			((++ iter_count))
 		done
