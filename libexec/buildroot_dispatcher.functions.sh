@@ -14,6 +14,7 @@ source assert.functions.sh
 
 source buildroot_config.functions.sh
 source buildroot_cwd.functions.sh
+source buildroot_xctc_sdk_depot.functions.sh
 
 ##
 
@@ -42,7 +43,6 @@ function buildroot_dispatcher() { # ...
 	local action=
 	local action_args=()
 	local output_selector=
-	local d1 d2 x1 x2
 
 	while [ $# -gt 0 ] ; do
 	case "${1}" in
@@ -330,55 +330,18 @@ function buildroot_dispatcher() { # ...
 		if [[ "${output_selector:?}" == xctc && ${action:?} == make ]] ; then
 
 			case "x ${action_args[@]} x" in
-			*" clean "*|*" distclean "*|*" toolchain-external"*"clean "*)
-				for d1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
-				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
+			*" clean "*|*" distclean "*|*" toolchain-"*"clean "*)
 
-					for x2 in "${d2:?}"/* ; do
-					for x1 in "${d1:?}/${x2#${d2:?}/}" ; do
-
-						[[ -e ${d1:?} && -e ${x2:?} ]] || continue
-
-						xx rm -rf "${x1:?}"
-					done;done
-				done;done
-				#^-- forces a non-xctc build that uses the xctc sdk to 'download' a fresh copy
-
-				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
-
-					[[ -e ${d2:?} ]] || continue
-
-					xx rm -rf "${d2:?}"
-				done
+				# no special action to take: build housekeeping should not affect package archive
 				;;
 
 			*" sdk "*)
-				for d1 in "${BR2_ENV_DL_DIR:?}"/toolchain-external* ; do
-				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
 
-					for x2 in "${d2:?}"/* ; do
-					for x1 in "${d1:?}/{x2#${d2:?}/}" ; do
+				register_buildroot_xctc_sdk_with_depot package_archive "${BR2_ENV_DL_DIR:?}" "${BR2_ENV_OUTPUT_DIR}" # new sdk
 
-						[[ -e ${d1:?} && -e ${x2:?} ]] || continue
+				withdraw_buildroot_xctc_sdk_from_depot download_cache "${BR2_ENV_DL_DIR:?}" "${BR2_ENV_OUTPUT_DIR}" # now stale
 
-						xx rm -rf "${x1:?}"
-					done;done
-				done;done
-				#^-- forces a non-xctc build that uses the xctc sdk to 'download' a fresh copy
-
-				for d1 in "${BR2_ENV_OUTPUT_DIR:?}"/images ; do
-				for d2 in "${BR2_ENV_DL_DIR:?}"/buildroot-xctc ; do
-
-					for x1 in "${d1:?}"/*_sdk* ; do
-					for x2 in "${d2:?}/${x1#${d1:?}/}" ; do
-
-						[[ -e ${x1:?} ]] || continue
-
-						[[ -e ${d2:?} ]] || xx mkdir -p "${d2:?}"
-
-						xx rsync -a -i -c "${x1:?}" "${x2:?}"
-					done;done
-				done;done
+				trigger_download_of_buildroot_xctc_sdk_on_next_build_within "${BR2_ENV_OUTPUT_MAIN_DIR:?}"
 				;;
 			esac
 		fi
