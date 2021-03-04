@@ -260,7 +260,7 @@ function buildroot_all_output_trees_build() { # [ main_defconfig_fbn [ xctc_defc
 
 			xx :
 
-			xx buildroot.sh --output-"${output_selector:?}" "${output_goal:?}"
+			xx buildroot --output-"${output_selector:?}" "${output_goal:?}"
 		done
 	done
 }
@@ -273,7 +273,7 @@ function buildroot_all_output_trees_clean() { #
 
 		xx :
 
-		xx buildroot.sh --output-"${output_selector:?}" clean
+		xx buildroot --output-"${output_selector:?}" clean
 	done
 }
 
