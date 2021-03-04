@@ -22,8 +22,6 @@ function install_package() { # [package_name...]
 
 		export LC_ALL=C LANGUAGE=C LANG=C
 
-		set -x
-
 		sudo_pass_through apt-get --quiet --yes install "$@"
 	)
 	fi
