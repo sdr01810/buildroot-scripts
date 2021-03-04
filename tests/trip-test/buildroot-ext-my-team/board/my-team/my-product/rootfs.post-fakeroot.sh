@@ -327,7 +327,7 @@ function setup_hostname() {
 
 			xx cat "${x1_in:?}" |
 
-			xx sed -e '/./!d' | # FIXME: add a uniqueifier to host name
+			xx sed -e '/./!d' | # TODO: add a uniquifier to host name
 
 			xx tee "${x1:?}"
 		)

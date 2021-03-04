@@ -9,7 +9,7 @@ VERSION_CODENAME_template=${VERSION_CODENAME}
 ID=my_product
 ID_LIKE_template=${ID_orig}
 
-# FIXME: provide these URLs:
+# TODO: provide these URLs:
 #
 # HOME_URL=""
 # SUPPORT_URL=""
