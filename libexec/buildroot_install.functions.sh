@@ -12,6 +12,8 @@ buildroot_install_debug_p=
 
 source install_package.functions.sh
 
+source never_mind_optional_package.functions.sh
+
 ##
 
 buildroot_artifact_signer_gpg_key_url= # TODO
@@ -131,13 +133,14 @@ function buildroot_install_deps() {
 
 	packages+=(
 		python3
-		python-is-python3
 		python3-matplotlib
 		python3-numpy
 		graphviz
 	)
 
 	local packages_optional=()
+
+	packages_optional+=( python-is-python3 )
 
 	packages_optional+=( debootstrap qemu-user-static binfmt-support )
 	#^-- rootfs overlay creation tools: qemu-debootstrap(8) and friends
