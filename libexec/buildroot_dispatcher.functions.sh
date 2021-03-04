@@ -277,7 +277,7 @@ function buildroot_dispatcher() { # ...
 		;;
 	esac
 
-	local invoke=( xx /usr/bin/env )
+	local invoke=( xx )
 	local action_cmd=() 
 
 	case "${action:?}" in
@@ -325,7 +325,12 @@ function buildroot_dispatcher() { # ...
 			;;
 		esac
 
-		"${invoke[@]}" "${action_env_vars[@]}" "${action_cmd[@]}" "${action_vars[@]}" "${action_args[@]}"
+		for x1 in "${action_env_vars[@]}" ; do
+
+			eval "xx export $(printf %q "${x1:?}")"
+		done
+
+		"${invoke[@]}" "${action_cmd[@]}" "${action_vars[@]}" "${action_args[@]}"
 
 		if [[ "${output_selector:?}" == xctc && ${action:?} == make ]] ; then
 
