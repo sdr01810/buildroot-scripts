@@ -192,14 +192,17 @@ function buildroot_dispatcher() { # ...
 	case "${output_selector:?}" in
 	all-output-trees|install|trip-test)
 		BR2_ENV_OUTPUT_DIR="NONE"
+		BR2_ENV_CCACHE_DIR="NONE"
 		;;
 
 	main)
 		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-${BR2_ENV_OUTPUT_DIR}}"
+		BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_MAIN_DIR:-${BR2_ENV_CCACHE_DIR}}"
 		;;
 
 	rol)
 		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-${BR2_ENV_OUTPUT_DIR}}"
+		BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_MAIN_DIR:-${BR2_ENV_CCACHE_DIR}}"
 		#^-- by design: the rol build uses the main buildroot config
 
 		check_buildroot_action "${action:?}" "make" || return $?
@@ -228,6 +231,7 @@ function buildroot_dispatcher() { # ...
 
 	xctc)
 		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-${BR2_ENV_OUTPUT_DIR}}"
+		BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_XCTC_DIR:-${BR2_ENV_CCACHE_DIR}}"
 
 		! [[ ${action:?} == make ]] ||
 
@@ -263,11 +267,17 @@ function buildroot_dispatcher() { # ...
 	! [[ -n ${BR2_ENV_OUTPUT_DIR} ]] ||
 	action_env_vars01+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
 
+	! [[ -n ${BR2_ENV_CCACHE_DIR} ]] ||
+	action_env_vars01+=( BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_DIR}" )
+
 	! [[ -n ${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}} ]] ||
 	action_env_vars02+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" )
 
 	! [[ -n ${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}} ]] ||
 	action_env_vars03+=( BR2_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}}" )
+
+	! [[ -n ${BR2_ENV_CCACHE_DIR:-${BR2_CCACHE_DIR}} ]] ||
+	action_env_vars03+=( BR2_CCACHE_DIR="${BR2_ENV_CCACHE_DIR:-${BR2_CCACHE_DIR}}" )
 
 	! [[ -n ${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}} ]] ||
 	action_env_vars04+=( BR2_EXTERNAL="${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}}" )

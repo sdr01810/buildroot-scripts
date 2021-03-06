@@ -128,9 +128,9 @@ function list_buildroot_config_variable_bindings() { # [ --env-omit | --env-only
 
 	(set -o posix && set) |
 
-	(egrep '^(BR_|BR2_|HOST)\w+=' || :) |
+	(egrep '^(BR_|BR2_|CCACHE_|HOST)\w+=' || :) |
 
-	#^-- TODO: include additional variables defined by buildroot
+	#^-- TODO: include additional variables defined/honored by buildroot
 
 	(egrep -v '^HOST(NAME|TYPE)=' || :) | #<-- defined by bash, not buildroot
 
@@ -278,21 +278,22 @@ function load_buildroot_config__defaults__core() {
 	export BR2_ENV_DL_PTB_DIR="${BR2_ENV_DL_PTB_DIR:-$(realpath "${prefix:?}-dl-ptb")}"
 
 	export BR2_ENV_OUTPUT_MAIN_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-$(realpath "${prefix:?}-output-main")}"
+	export BR2_ENV_CCACHE_MAIN_DIR="${BR2_ENV_CCACHE_MAIN_DIR:-$(realpath "${prefix:?}-ccache-main")}"
 
 	export BR2_ENV_OUTPUT_XCTC_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-$(realpath "${prefix:?}-output-xctc")}"
+	export BR2_ENV_CCACHE_XCTC_DIR="${BR2_ENV_CCACHE_XCTC_DIR:-$(realpath "${prefix:?}-ccache-xctc")}"
 
 	##
 
 	export BR2_ENV_DL_DIR="${BR2_ENV_DL_PTB_DIR:?}"
 
-	export BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:?}"
+	export BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-}"
+	export BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_DIR:-}"
 }
 
 function load_buildroot_config__defaults__rootfs_overlay() {
 
 	: "${BR2_ENV_DL_PTB_DIR:?missing value for BR2_ENV_DL_PTB_DIR}"
-
-	: "${BR2_ENV_OUTPUT_DIR:?missing value for BR2_ENV_OUTPUT_DIR}"
 
 	##
 
