@@ -1,12 +1,12 @@
 ##/bin/bash
-## Provides function buildroot_dispatcher() and friends.
+## Provides function buildroot_cli_dispatcher() and friends.
 ##
 
-[ -z "$buildroot_dispatcher_functions_p" ] || return 0
+[ -z "$buildroot_cli_dispatcher_functions_p" ] || return 0
 
-buildroot_dispatcher_functions_p=t
+buildroot_cli_dispatcher_functions_p=t
 
-buildroot_dispatcher_debug_p=
+buildroot_cli_dispatcher_debug_p=
 
 ##
 
@@ -38,7 +38,7 @@ function check_buildroot_output_selector() { # actual_value expected_value
 
 ##
 
-function buildroot_dispatcher() { # ...
+function buildroot_cli_dispatcher() { # ...
 
 	local action=
 	local action_args=()
@@ -412,8 +412,8 @@ function buildroot_dispatcher() { # ...
 	)
 }
 
-function xx_buildroot_dispatcher() { # ...
+function xx_buildroot_cli_dispatcher() { # ...
 
-	buildroot_dispatcher "$@"
+	buildroot_cli_dispatcher "$@"
 }
 

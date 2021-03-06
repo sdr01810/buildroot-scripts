@@ -126,13 +126,13 @@
 
 source "$(dirname "${BASH_SOURCE:?}")"/thunk/buildroot-scripts.prolog.sh
 
-source buildroot_dispatcher.functions.sh
+source buildroot_cli_dispatcher.functions.sh
 
 ##
 
 function main() { # ...
 
-	xx_buildroot_dispatcher "$@"
+	xx_buildroot_cli_dispatcher "$@"
 }
 
 ! [ "$0" = "${BASH_SOURCE}" ] || main "$@"
