@@ -2,7 +2,7 @@ function sudo_pass_through() { # ...
 
 	if [ "$(id -u)" -ne 0 ] ; then
 
-		command sudo "$@"
+		sudo "$@"
 		return $?
 	fi
 
