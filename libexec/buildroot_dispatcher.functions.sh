@@ -10,7 +10,7 @@ buildroot_dispatcher_debug_p=
 
 ##
 
-source assert.functions.sh
+source snippet_assert.functions.sh
 
 source buildroot_config.functions.sh
 source buildroot_cwd.functions.sh

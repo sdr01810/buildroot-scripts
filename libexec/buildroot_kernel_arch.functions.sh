@@ -10,7 +10,7 @@ buildroot_kernel_arch_debug_p=
 
 ##
 
-source linux_kernel_arch.functions.sh
+source snippet_linux_kernel_arch.functions.sh
 
 ##
 

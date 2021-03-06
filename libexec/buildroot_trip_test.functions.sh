@@ -10,9 +10,9 @@ buildroot_trip_test_debug_p=
 
 ##
 
-source assert.functions.sh
+source snippet_assert.functions.sh
 
-source test.functions.sh
+source snippet_test.functions.sh
 
 ##
 

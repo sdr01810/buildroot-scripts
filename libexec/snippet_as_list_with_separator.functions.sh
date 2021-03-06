@@ -10,7 +10,7 @@ as_list_with_separator_debug_p=
 
 ##
 
-source omit_wsac.functions.sh
+source snippet_omit_wsac.functions.sh
 
 ##
 

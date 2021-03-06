@@ -10,7 +10,7 @@ test_debug_p=
 
 ##
 
-source assert.functions.sh
+source snippet_assert.functions.sh
 
 ##
 

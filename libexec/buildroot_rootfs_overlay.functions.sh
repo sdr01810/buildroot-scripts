@@ -10,15 +10,15 @@ buildroot_rootfs_overlay_debug_p=
 
 ##
 
-source assert.functions.sh
+source snippet_assert.functions.sh
 
-source as_list_with_separator.functions.sh
+source snippet_as_list_with_separator.functions.sh
 
-source debian_arch.functions.sh
+source snippet_debian_arch.functions.sh
 
-source ensure_backup_of_original_file.functions.sh
+source snippet_ensure_backup_of_original_file.functions.sh
 
-source list_mount_points_below.functions.sh
+source snippet_list_mount_points_below.functions.sh
 
 ##
 

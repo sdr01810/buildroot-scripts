@@ -10,9 +10,9 @@ buildroot_install_debug_p=
 
 ##
 
-source install_package.functions.sh
+source snippet_install_package.functions.sh
 
-source never_mind_optional_package.functions.sh
+source snippet_never_mind_optional_package.functions.sh
 
 ##
 

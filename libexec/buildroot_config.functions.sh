@@ -13,7 +13,7 @@ buildroot_config_debug_p=
 source buildroot_cwd.functions.sh
 source buildroot_kernel_arch.functions.sh
 
-source omit_wsac.functions.sh
+source snippet_omit_wsac.functions.sh
 
 ##
 
