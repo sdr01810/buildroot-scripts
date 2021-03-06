@@ -1,6 +1,6 @@
 ##/bin/bash
 ## Provides function buildroot_dispatcher() and friends.
-## 
+##
 
 [ -z "$buildroot_dispatcher_functions_p" ] || return 0
 
@@ -38,7 +38,7 @@ function check_buildroot_output_selector() { # actual_value expected_value
 
 ##
 
-function buildroot_dispatcher() { # ... 
+function buildroot_dispatcher() { # ...
 
 	local action=
 	local action_args=()
@@ -186,9 +186,6 @@ function buildroot_dispatcher() { # ...
 
 	*)
 		load_buildroot_config
-
-		: "${BR2_ENV_OUTPUT_MAIN_DIR:?missing value for BR2_ENV_OUTPUT_MAIN_DIR}"
-		: "${BR2_ENV_OUTPUT_XCTC_DIR:?missing value for BR2_ENV_OUTPUT_XCTC_DIR}"
 		;;
 	esac
 
@@ -198,11 +195,11 @@ function buildroot_dispatcher() { # ...
 		;;
 
 	main)
-		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:?}"
+		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-${BR2_ENV_OUTPUT_DIR}}"
 		;;
 
 	rol)
-		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:?}"
+		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_MAIN_DIR:-${BR2_ENV_OUTPUT_DIR}}"
 		#^-- by design: the rol build uses the main buildroot config
 
 		check_buildroot_action "${action:?}" "make" || return $?
@@ -230,7 +227,7 @@ function buildroot_dispatcher() { # ...
 		;;
 
 	xctc)
-		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:?}"
+		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-${BR2_ENV_OUTPUT_DIR}}"
 
 		! [[ ${action:?} == make ]] ||
 
@@ -254,7 +251,17 @@ function buildroot_dispatcher() { # ...
 		;;
 	esac
 
+	: "${BR2_ENV_OUTPUT_DIR:?missing value for${output_selector:+ }${output_selector} build output directory}"
+
+	##
+
 	local action_env_vars=()
+
+	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] ||
+	action_env_vars+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
+
+	! [ -n "${BR2_OUTPUT_DIR:-${BR2_ENV_OUTPUT_DIR}}" ] ||
+	action_env_vars+=( BR2_OUTPUT_DIR="${BR2_OUTPUT_DIR:-${BR2_ENV_OUTPUT_DIR:?}}" )
 
 	! [ -n "${BR2_DL_DIR:-${BR2_ENV_DL_DIR}}" ] ||
 	action_env_vars+=( BR2_DL_DIR="${BR2_DL_DIR:-${BR2_ENV_DL_DIR:?}}" )
@@ -267,7 +274,7 @@ function buildroot_dispatcher() { # ...
 
 	local action_vars=()
 
-	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] || 
+	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] ||
 	case "${action:?}" in
 	make)
 		action_vars+=( O="${BR2_ENV_OUTPUT_DIR:?}" )
@@ -277,8 +284,10 @@ function buildroot_dispatcher() { # ...
 		;;
 	esac
 
+	##
+
 	local invoke=( xx )
-	local action_cmd=() 
+	local action_cmd=()
 
 	case "${action:?}" in
 	all-output-trees|install|trip-test)
@@ -353,7 +362,7 @@ function buildroot_dispatcher() { # ...
 	)
 }
 
-function xx_buildroot_dispatcher() { # ... 
+function xx_buildroot_dispatcher() { # ...
 
 	buildroot_dispatcher "$@"
 }
