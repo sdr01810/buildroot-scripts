@@ -260,17 +260,17 @@ function buildroot_dispatcher() { # ...
 	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] ||
 	action_env_vars+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
 
-	! [ -n "${BR2_OUTPUT_DIR:-${BR2_ENV_OUTPUT_DIR}}" ] ||
-	action_env_vars+=( BR2_OUTPUT_DIR="${BR2_OUTPUT_DIR:-${BR2_ENV_OUTPUT_DIR:?}}" )
+	! [ -n "${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}}" ] ||
+	action_env_vars+=( BR2_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR:?}}" )
 
-	! [ -n "${BR2_DL_DIR:-${BR2_ENV_DL_DIR}}" ] ||
-	action_env_vars+=( BR2_DL_DIR="${BR2_DL_DIR:-${BR2_ENV_DL_DIR:?}}" )
+	! [ -n "${BR2_ENV_DL_DIR:-${BR2_DL_DIR}}" ] ||
+	action_env_vars+=( BR2_DL_DIR="${BR2_ENV_DL_DIR:-${BR2_DL_DIR:?}}" )
 
-	! [ -n "${BR2_DEBUG_WRAPPER:-${BR2_ENV_DEBUG_WRAPPER}}" ] ||
-	action_env_vars+=( BR2_DEBUG_WRAPPER="${BR2_DEBUG_WRAPPER:-${BR2_ENV_DEBUG_WRAPPER:?}}" )
+	! [ -n "${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" ] ||
+	action_env_vars+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER:?}}" )
 
-	! [ -n "${BR2_EXTERNAL:-${BR2_ENV_EXTERNAL}}" ] ||
-	action_env_vars+=( BR2_EXTERNAL="${BR2_EXTERNAL:-${BR2_ENV_EXTERNAL:?}}" )
+	! [ -n "${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}}" ] ||
+	action_env_vars+=( BR2_EXTERNAL="${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL:?}}" )
 
 	local action_vars=()
 
