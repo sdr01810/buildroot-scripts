@@ -16,7 +16,7 @@
 ##     buildroot.target-tree.sh --clean-first
 ## 
 
-source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
+source "$(dirname "${BASH_SOURCE:?}")"/../../libexec/buildroot_cli.prolog.sh
 
 source buildroot_api_target_tree.functions.sh
 

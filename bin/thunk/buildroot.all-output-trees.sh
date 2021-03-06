@@ -18,7 +18,7 @@
 ##     buildroot.all-output-trees.sh --clean-only
 ## 
 
-source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
+source "$(dirname "${BASH_SOURCE:?}")"/../../libexec/buildroot_cli.prolog.sh
 
 source buildroot_api_all_output_trees.functions.sh
 

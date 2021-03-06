@@ -14,7 +14,7 @@
 ##     buildroot.qemu-vm.sh --run --using-boot-disk
 ## 
 
-source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
+source "$(dirname "${BASH_SOURCE:?}")"/../../libexec/buildroot_cli.prolog.sh
 
 source buildroot_api_qemu_vm.functions.sh
 

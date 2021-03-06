@@ -124,7 +124,7 @@
 ##     ../bin/thunk/buildroot.trip-test.sh
 ## 
 
-source "$(dirname "${BASH_SOURCE:?}")"/thunk/buildroot-scripts.prolog.sh
+source "$(dirname "${BASH_SOURCE:?}")"/../libexec/buildroot_cli.prolog.sh
 
 source buildroot_cli_dispatcher.functions.sh
 

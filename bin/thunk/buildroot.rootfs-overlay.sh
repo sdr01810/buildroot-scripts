@@ -26,7 +26,7 @@
 ##     Only supported for Debian-based build hosts and targets.
 ## 
 
-source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
+source "$(dirname "${BASH_SOURCE:?}")"/../../libexec/buildroot_cli.prolog.sh
 
 source buildroot_api_rootfs_overlay.functions.sh
 
