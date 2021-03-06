@@ -78,13 +78,13 @@ function xx_cd_buildroot() {
 
 	local buildroot_dpn="$(get_buildroot_dir_from_stack)" ; [ -n "${buildroot_dpn}" ] || return $?
 
-	xx cd "${buildroot_dpn:?}" >/dev/null && xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
+	xx : && xx cd "${buildroot_dpn:?}" >/dev/null && xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
 }
 
 function xx_pushd_buildroot() {
 
 	local buildroot_dpn="$(get_buildroot_dir_from_stack)" ; [ -n "${buildroot_dpn}" ] || return $?
 
-	xx pushd "${buildroot_dpn:?}" >/dev/null && xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
+	xx : && xx pushd "${buildroot_dpn:?}" >/dev/null && xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
 }
 
