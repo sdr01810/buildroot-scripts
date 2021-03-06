@@ -74,12 +74,12 @@ function buildroot_trip_test() { # ...
 
         if [[ -n ${clean_all_p} ]] ; then
 
-		xx_buildroot_trip_test_clean
+		buildroot_trip_test_clean
 	fi
 
 	if [[ ${action:?} != clean ]] ; then
 
-		"xx_buildroot_trip_test_${action:-run}" "${action_args[@]}"
+		"buildroot_trip_test_${action:-run}" "${action_args[@]}"
 	fi
 }
 
@@ -593,17 +593,3 @@ function buildroot_trip_test_clean() { #
 	xx rm -rf buildroot*.tar.gz
 }
 
-function xx_buildroot_trip_test() { # ...
-
-	buildroot_trip_test "${@}"
-}
-
-function xx_buildroot_trip_test_run() { # ...
-
-	buildroot_trip_test_run "${@}"
-}
-
-function xx_buildroot_trip_test_clean() { # ...
-
-	buildroot_trip_test_clean "${@}"
-}

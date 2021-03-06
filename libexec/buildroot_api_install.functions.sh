@@ -197,18 +197,3 @@ function buildroot_install_deps() {
 	return ${xc:-0}
 }
 
-function xx_buildroot_install() {
-
-	buildroot_install "$@"
-}
-
-function xx_buildroot_install_deps() {
-
-	buildroot_install_deps "$@"
-}
-
-function xx_buildroot_install_core() {
-
-	buildroot_install_core "$@"
-}
-

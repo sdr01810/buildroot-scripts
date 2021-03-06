@@ -29,6 +29,6 @@ function buildroot_cli_handler_for_make() { # ...
 
 	load_buildroot_config
 
-	xx_buildroot_make "$@"
+	buildroot_make "$@"
 }
 

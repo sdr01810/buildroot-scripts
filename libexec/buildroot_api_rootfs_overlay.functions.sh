@@ -112,16 +112,16 @@ function buildroot_rootfs_overlay() { # ...
 
         if [[ -n ${clean_all_p} ]] ; then
 
-		xx_buildroot_rootfs_overlay_clean
+		buildroot_rootfs_overlay_clean
 	else
 	if [[ -n ${clean_tarball_p} ]] ; then
 
-		xx_buildroot_rootfs_overlay_clean --tarball-only
+		buildroot_rootfs_overlay_clean --tarball-only
 	fi;fi
 
 	if [[ ${action:?} != clean ]] ; then
 
-		"xx_buildroot_rootfs_overlay_${action:?}" "${action_args[@]}"
+		"buildroot_rootfs_overlay_${action:?}" "${action_args[@]}"
 	fi
 }
 
@@ -649,27 +649,5 @@ function buildroot_rootfs_overlay_util_ensure_no_mount_points_below() { # rootfs
 			xx sudo_pass_through umount "${d1:?}"
 		done
 	done
-}
-
-##
-
-function xx_buildroot_rootfs_overlay() { # ...
-
-	buildroot_rootfs_overlay "$@"
-}
-
-function xx_buildroot_rootfs_overlay_clean() { # ...
-
-	buildroot_rootfs_overlay_clean "$@"
-}
-
-function xx_buildroot_rootfs_overlay_build() { # ...
-
-	buildroot_rootfs_overlay_build "$@"
-}
-
-function xx_buildroot_rootfs_overlay_run_hook_post_fakeroot() { #
-
-	buildroot_rootfs_overlay_run_hook_post_fakeroot "$@"
 }
 

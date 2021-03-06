@@ -202,12 +202,12 @@ function buildroot_all_output_trees() { # ...
 
         if [[ -n ${clean_all_p} ]] ; then
 
-		xx_buildroot_all_output_trees_clean
+		buildroot_all_output_trees_clean
 	fi
 
 	if [[ ${action:?} != clean ]] ; then
 
-		"xx_buildroot_all_output_trees_${action:?}" "${action_args[@]}"
+		"buildroot_all_output_trees_${action:?}" "${action_args[@]}"
 	fi
 }
 
@@ -277,17 +277,3 @@ function buildroot_all_output_trees_clean() { #
 	done
 }
 
-function xx_buildroot_all_output_trees() { # ...
-
-	buildroot_all_output_trees "$@"
-}
-
-function xx_buildroot_all_output_trees_build() { # ...
-
-	buildroot_all_output_trees_build "$@"
-}
-
-function xx_buildroot_all_output_trees_clean() { # ...
-
-	buildroot_all_output_trees_clean "$@"
-}

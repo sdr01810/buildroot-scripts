@@ -66,12 +66,12 @@ function buildroot_host_tree() { # ...
 
         if [[ -n ${clean_all_p} ]] ; then
 
-		xx_buildroot_host_tree_clean
+		buildroot_host_tree_clean
 	fi
 
 	if [[ ${action:?} != clean ]] ; then
 
-		"xx_buildroot_host_tree_${action:?}" "${action_args[@]}"
+		"buildroot_host_tree_${action:?}" "${action_args[@]}"
 	fi
 }
 
@@ -88,20 +88,5 @@ function buildroot_host_tree_clean() { #
 
 	find -H "${BR2_ENV_OUTPUT_DIR:?}"/build -name '.stamp_host_installed' |
 	while read -r x1 ; do xx rm -rf "${x1:?}" ; done
-}
-
-function xx_buildroot_host_tree() { # ...
-
-	buildroot_host_tree "$@"
-}
-
-function xx_buildroot_host_tree_build() { # ...
-
-	buildroot_host_tree_build "$@"
-}
-
-function xx_buildroot_host_tree_clean() { # ...
-
-	buildroot_host_tree_clean "$@"
 }
 

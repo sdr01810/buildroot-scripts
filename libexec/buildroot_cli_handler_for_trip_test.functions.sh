@@ -30,6 +30,6 @@ source buildroot_api_trip_test.functions.sh
 
 function buildroot_cli_handler_for_trip_test() { # ...
 
-	xx_buildroot_trip_test "$@"
+	buildroot_trip_test "$@"
 }
 

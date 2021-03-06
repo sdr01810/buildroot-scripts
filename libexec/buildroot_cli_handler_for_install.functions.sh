@@ -27,6 +27,6 @@ source buildroot_api_install.functions.sh
 
 function buildroot_cli_handler_for_install() { # ...
 
-	xx_buildroot_install "$@"
+	buildroot_install "$@"
 }
 

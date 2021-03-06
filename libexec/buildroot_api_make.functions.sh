@@ -19,8 +19,3 @@ function buildroot_make() { # ...
 	xx make "$@"
 }
 
-function xx_buildroot_make() {
-
-	buildroot_make "$@"
-}
-

@@ -29,7 +29,7 @@ function buildroot_qemu_vm() { # [--run] ...
 		;;
 	esac
 
-	xx_buildroot_qemu_vm_run "$@"
+	buildroot_qemu_vm_run "$@"
 }
 
 function buildroot_qemu_vm_run() { # [--using-boot-disk|--using-initrd]
@@ -81,15 +81,5 @@ function buildroot_qemu_vm_run() { # [--using-boot-disk|--using-initrd]
 	esac
 
 	xx "${qemu_system_cmd[@]}" "${qemu_system_opts[@]}" "$@"
-}
-
-function xx_buildroot_qemu_vm() { # ...
-
-	buildroot_qemu_vm "$@"
-}
-
-function xx_buildroot_qemu_vm_run() { # ...
-
-	buildroot_qemu_vm_run "$@"
 }
 

@@ -30,6 +30,6 @@ function buildroot_cli_handler_for_qemu_vm() { # ...
 
 	load_buildroot_config
 
-	xx_buildroot_qemu_vm "$@"
+	buildroot_qemu_vm "$@"
 }
 

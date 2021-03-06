@@ -35,6 +35,6 @@ source buildroot_api_all_output_trees.functions.sh
 
 function buildroot_cli_handler_for_all_output_trees() { # ...
 
-	xx_buildroot_all_output_trees "$@"
+	buildroot_all_output_trees "$@"
 }
 

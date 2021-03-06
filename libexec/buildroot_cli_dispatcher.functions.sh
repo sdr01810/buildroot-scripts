@@ -347,7 +347,7 @@ function buildroot_cli_dispatcher() { # ...
 			true
 			;;
 		*)
-			xx_pushd_buildroot
+			pushd_buildroot
 			;;
 		esac
 
@@ -408,10 +408,5 @@ function buildroot_cli_dispatcher() { # ...
 			esac
 		fi
 	)
-}
-
-function xx_buildroot_cli_dispatcher() { # ...
-
-	buildroot_cli_dispatcher "$@"
 }
 

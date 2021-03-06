@@ -132,7 +132,7 @@ source buildroot_cli_dispatcher.functions.sh
 
 function main() { # ...
 
-	xx_buildroot_cli_dispatcher "$@"
+	buildroot_cli_dispatcher "$@"
 }
 
 ! [ "$0" = "${BASH_SOURCE}" ] || main "$@"

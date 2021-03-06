@@ -64,27 +64,19 @@ function cd_buildroot() {
 
 	local buildroot_dpn="$(get_buildroot_dir_from_stack)" ; [ -n "${buildroot_dpn}" ] || return $?
 
-	cd "${buildroot_dpn:?}" >/dev/null && export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
+	xx_lod 9 : &&
+
+	xx_lod 9 cd "${buildroot_dpn:?}" >/dev/null &&
+
+	xx_lod 9 export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
 }
 
 function pushd_buildroot() {
 
 	local buildroot_dpn="$(get_buildroot_dir_from_stack)" ; [ -n "${buildroot_dpn}" ] || return $?
 
-	pushd "${buildroot_dpn:?}" >/dev/null && export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
-}
+	xx : && xx pushd "${buildroot_dpn:?}" >/dev/null &&
 
-function xx_cd_buildroot() {
-
-	local buildroot_dpn="$(get_buildroot_dir_from_stack)" ; [ -n "${buildroot_dpn}" ] || return $?
-
-	xx : && xx cd "${buildroot_dpn:?}" >/dev/null && xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
-}
-
-function xx_pushd_buildroot() {
-
-	local buildroot_dpn="$(get_buildroot_dir_from_stack)" ; [ -n "${buildroot_dpn}" ] || return $?
-
-	xx : && xx pushd "${buildroot_dpn:?}" >/dev/null && xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
+	xx export BR2_ENV_CURRENT_BUILDROOT_DIR="${PWD:?}"
 }
 

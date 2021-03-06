@@ -67,12 +67,12 @@ function buildroot_target_tree() { # ...
 
         if [[ -n ${clean_all_p} ]] ; then
 
-		xx_buildroot_target_tree_clean
+		buildroot_target_tree_clean
 	fi
 
 	if [[ ${action:?} != clean ]] ; then
 
-		"xx_buildroot_target_tree_${action:?}" "${action_args[@]}"
+		"buildroot_target_tree_${action:?}" "${action_args[@]}"
 	fi
 }
 
@@ -91,17 +91,3 @@ function buildroot_target_tree_clean() { #
 	while read -r x1 ; do xx rm -rf "${x1:?}" ; done
 }
 
-function xx_buildroot_target_tree() { # ...
-
-	buildroot_target_tree "$@"
-}
-
-function xx_buildroot_target_tree_build() { # ...
-
-	buildroot_target_tree_build "$@"
-}
-
-function xx_buildroot_target_tree_clean() { # ...
-
-	buildroot_target_tree_clean "$@"
-}

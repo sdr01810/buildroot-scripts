@@ -32,6 +32,6 @@ function buildroot_cli_handler_for_host_tree() { # ...
 
 	load_buildroot_config
 
-	xx_buildroot_host_tree "$@"
+	buildroot_host_tree "$@"
 }
 

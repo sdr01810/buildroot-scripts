@@ -42,6 +42,6 @@ function buildroot_cli_handler_for_rootfs_overlay() { # ...
 
 	load_buildroot_config
 
-	xx_buildroot_rootfs_overlay "$@"
+	buildroot_rootfs_overlay "$@"
 }
 

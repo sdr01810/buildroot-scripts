@@ -32,6 +32,6 @@ function buildroot_cli_handler_for_target_tree() { # ...
 
 	load_buildroot_config
 
-	xx_buildroot_target_tree "$@"
+	buildroot_target_tree "$@"
 }
 
