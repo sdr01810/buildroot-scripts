@@ -255,26 +255,31 @@ function buildroot_dispatcher() { # ...
 
 	##
 
-	local action_env_vars=()
+	local action_env_vars01=()
+	local action_env_vars02=()
+	local action_env_vars03=()
+	local action_env_vars04=()
 
-	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] ||
-	action_env_vars+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
+	! [[ -n ${BR2_ENV_OUTPUT_DIR} ]] ||
+	action_env_vars01+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
 
-	! [ -n "${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}}" ] ||
-	action_env_vars+=( BR2_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR:?}}" )
+	! [[ -n ${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}} ]] ||
+	action_env_vars02+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" )
 
-	! [ -n "${BR2_ENV_DL_DIR:-${BR2_DL_DIR}}" ] ||
-	action_env_vars+=( BR2_DL_DIR="${BR2_ENV_DL_DIR:-${BR2_DL_DIR:?}}" )
+	! [[ -n ${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}} ]] ||
+	action_env_vars03+=( BR2_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}}" )
 
-	! [ -n "${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" ] ||
-	action_env_vars+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER:?}}" )
+	! [[ -n ${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}} ]] ||
+	action_env_vars04+=( BR2_EXTERNAL="${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}}" )
 
-	! [ -n "${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}}" ] ||
-	action_env_vars+=( BR2_EXTERNAL="${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL:?}}" )
+	! [[ -n ${BR2_ENV_DL_DIR:-${BR2_DL_DIR}} ]] ||
+	action_env_vars04+=( BR2_DL_DIR="${BR2_ENV_DL_DIR:-${BR2_DL_DIR}}" )
+
+	##
 
 	local action_vars=()
 
-	! [ -n "${BR2_ENV_OUTPUT_DIR}" ] ||
+	! [[ -n ${BR2_ENV_OUTPUT_DIR} ]] ||
 	case "${action:?}" in
 	make)
 		action_vars+=( O="${BR2_ENV_OUTPUT_DIR:?}" )
@@ -325,6 +330,8 @@ function buildroot_dispatcher() { # ...
 	esac
 
 	(
+		local x1 i
+
 		case "${action:?}" in
 		all-output-trees|install|trip-test)
 			true
@@ -334,10 +341,43 @@ function buildroot_dispatcher() { # ...
 			;;
 		esac
 
-		for x1 in "${action_env_vars[@]}" ; do
+		i=0
+
+		for x1 in "${action_env_vars01[@]}" ; do
+
+			! [[ $((i ++)) -eq 0 ]] || xx :
 
 			eval "xx export $(printf %q "${x1:?}")"
 		done
+
+		i=0
+
+		for x1 in "${action_env_vars02[@]}" ; do
+
+			! [[ $((i ++)) -eq 0 ]] || xx :
+
+			eval "xx export $(printf %q "${x1:?}")"
+		done
+
+		i=0
+
+		for x1 in "${action_env_vars03[@]}" ; do
+
+			! [[ $((i ++)) -eq 0 ]] || xx :
+
+			eval "xx export $(printf %q "${x1:?}")"
+		done
+
+		i=0
+
+		for x1 in "${action_env_vars04[@]}" ; do
+
+			! [[ $((i ++)) -eq 0 ]] || xx :
+
+			eval "xx export $(printf %q "${x1:?}")"
+		done
+
+		xx :
 
 		"${invoke[@]}" "${action_cmd[@]}" "${action_vars[@]}" "${action_args[@]}"
 
