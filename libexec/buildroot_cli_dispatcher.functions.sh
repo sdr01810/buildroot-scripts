@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides function buildroot_cli_dispatcher() and friends.
 ##
 
@@ -10,19 +10,22 @@ buildroot_cli_dispatcher_debug_p=
 
 ##
 
-source snippet_assert.functions.sh
+for _1_ in "${BASH_SOURCE%_cli_dispatcher.*.sh}"_cli_handler_*.functions.sh ; do
 
-source buildroot_api_config.functions.sh
-source buildroot_api_cwd.functions.sh
-source buildroot_api_xctc_sdk_depot.functions.sh
+	source "${_1_:?}"
+done
+
+source "${BASH_SOURCE%_cli_dispatcher.*.sh}"_api.functions.sh
+
+source snippet_assert.functions.sh
 
 ##
 
-function check_buildroot_action() { # actual_value expected_value
+function check_buildroot_command() { # actual_value expected_value
 
 	if [ "${1}" != "${2}" ] ; then
 
-		echo 1>&2 "${this_script_fbn:?}: incorrect action: ${1}; expected: ${2}"
+		echo 1>&2 "${this_script_fbn:?}: incorrect command: ${1}; expected: ${2}"
 		false
 	fi
 }
@@ -40,8 +43,8 @@ function check_buildroot_output_selector() { # actual_value expected_value
 
 function buildroot_cli_dispatcher() { # ...
 
-	local action=
-	local action_args=()
+	local command=
+	local command_args=()
 	local output_selector=
 
 	while [ $# -gt 0 ] ; do
@@ -62,19 +65,19 @@ function buildroot_cli_dispatcher() { # ...
 		output_selector="${output_selector:-${1:?}}"
 		check_buildroot_output_selector "${output_selector:?}" "${1:?}" || return $?
 		
-		action="${action:-${1:?}}"
-		check_buildroot_action "${action:?}" "${1:?}" || return $?
+		command="${command:-${1:?}}"
+		check_buildroot_command "${command:?}" "${1:?}" || return $?
 
-		shift 1 ; action_args+=( "$@" )
+		shift 1 ; command_args+=( "$@" )
 
 		shift $#
 		;;
 
 	eval)
-		action="${action:-eval}"
-		check_buildroot_action "${action:?}" "eval" || return $?
+		command="${command:-eval}"
+		check_buildroot_command "${command:?}" "eval" || return $?
 
-		shift 1 ; action_args+=( "$@" )
+		shift 1 ; command_args+=( "$@" )
 
 		shift $#
 		;;
@@ -85,15 +88,15 @@ function buildroot_cli_dispatcher() { # ...
 			true
 			;;
 		*)
-			echo 1>&2 "${FUNCNAME:?}: unsupported action for ${output_selector:?} build: ${1:?}"
+			echo 1>&2 "${FUNCNAME:?}: unsupported command for ${output_selector:?} build: ${1:?}"
 			return 2
 			;;
 		esac
 
-		action="${action:-${1:?}}"
-		check_buildroot_action "${action:?}" "${1:?}" || return $?
+		command="${command:-${1:?}}"
+		check_buildroot_command "${command:?}" "${1:?}" || return $?
 
-		shift 1 ; action_args+=( "$@" )
+		shift 1 ; command_args+=( "$@" )
 
 		shift $#
 		;;
@@ -102,19 +105,19 @@ function buildroot_cli_dispatcher() { # ...
 		output_selector="${output_selector:-${1:?}}"
 		check_buildroot_output_selector "${output_selector:?}" "${1:?}" || return $?
 		
-		action="${action:-${1:?}}"
-		check_buildroot_action "${action:?}" "${1:?}" || return $?
+		command="${command:-${1:?}}"
+		check_buildroot_command "${command:?}" "${1:?}" || return $?
 
-		shift 1 ; action_args+=( "$@" )
+		shift 1 ; command_args+=( "$@" )
 
 		shift $#
 		;;
 
 	make)
-		action="${action:-make}"
-		check_buildroot_action "${action:?}" "make" || return $?
+		command="${command:-make}"
+		check_buildroot_command "${command:?}" "make" || return $?
 
-		shift 1 ; action_args+=( "$@" )
+		shift 1 ; command_args+=( "$@" )
 
 		shift $#
 		;;
@@ -123,10 +126,10 @@ function buildroot_cli_dispatcher() { # ...
 		output_selector="${output_selector:-main}"
 		check_buildroot_output_selector "${output_selector:?}" "main" || return $?
 		
-		action="${action:-${1:?}}"
-		check_buildroot_action "${action:?}" "${1:?}" || return $?
+		command="${command:-${1:?}}"
+		check_buildroot_command "${command:?}" "${1:?}" || return $?
 
-		shift 1 ; action_args+=( "$@" )
+		shift 1 ; command_args+=( "$@" )
 
 		shift $#
 		;;
@@ -135,10 +138,10 @@ function buildroot_cli_dispatcher() { # ...
 		output_selector="${output_selector:-xctc}"
 		check_buildroot_output_selector "${output_selector:?}" "xctc" || return $?
 
-		action="${action:-make}"
-		check_buildroot_action "${action:?}" "make" || return $?
+		command="${command:-make}"
+		check_buildroot_command "${command:?}" "make" || return $?
 
-		action_args+=( "${1:?}" )
+		command_args+=( "${1:?}" )
 
 		shift 1
 		;;
@@ -147,10 +150,10 @@ function buildroot_cli_dispatcher() { # ...
 		output_selector="${output_selector:-main}"
 		check_buildroot_output_selector "${output_selector:?}" "main" || return $?
 
-		action="${action:-make}"
-		check_buildroot_action "${action:?}" "make" || return $?
+		command="${command:-make}"
+		check_buildroot_command "${command:?}" "make" || return $?
 
-		action_args+=( "${1:?}" )
+		command_args+=( "${1:?}" )
 
 		shift 1
 		;;
@@ -159,16 +162,16 @@ function buildroot_cli_dispatcher() { # ...
 		output_selector="${output_selector:-xctc}"
 		check_buildroot_output_selector "${output_selector:?}" "xctc" || return $?
 
-		action="${action:-make}"
-		check_buildroot_action "${action:?}" "make" || return $?
+		command="${command:-make}"
+		check_buildroot_command "${command:?}" "make" || return $?
 
-		action_args+=( "${1:?}" )
+		command_args+=( "${1:?}" )
 
 		shift 1
 		;;
 
 	*|'')
-		action_args+=( "${1}" )
+		command_args+=( "${1}" )
 
 		shift 1
 		;;
@@ -176,7 +179,7 @@ function buildroot_cli_dispatcher() { # ...
 
 	#^-- TODO: add to command help's output: info about wrapper-specific commands
 
-	action="${action:-make}"
+	command="${command:-make}"
 	output_selector="${output_selector:-main}"
 
 	case "${output_selector:?}" in
@@ -205,23 +208,23 @@ function buildroot_cli_dispatcher() { # ...
 		BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_MAIN_DIR:-${BR2_ENV_CCACHE_DIR}}"
 		#^-- by design: the rol build uses the main buildroot config
 
-		check_buildroot_action "${action:?}" "make" || return $?
-		action="rootfs-overlay" #<-- by design: override
+		check_buildroot_command "${command:?}" "make" || return $?
+		command="rootfs-overlay" #<-- by design: override
 
-		case "x ${action_args[@]} x" in
+		case "x ${command_args[@]} x" in
 		*" all "*|*" clean "*|x"  "x)
-			case "x ${action_args[@]} x" in
+			case "x ${command_args[@]} x" in
 			x" all clean "x|x" clean all "x)
-				action_args=( --build --clean-first )
+				command_args=( --build --clean-first )
 				;;
 			x" all "x|x"  "x)
-				action_args=( --build )
+				command_args=( --build )
 				;;
 			x" clean "x)
-				action_args=( --clean-only )
+				command_args=( --clean-only )
 				;;
 			*)
-				echo 1>&2 "${FUNCNAME:?}: unsupported action(s) for ${output_selector:?} build: ${action_arg[@]}"
+				echo 1>&2 "${FUNCNAME:?}: unsupported command(s) for ${output_selector:?} build: ${command_arg[@]}"
 				return 2
 				;;
 			esac
@@ -233,16 +236,16 @@ function buildroot_cli_dispatcher() { # ...
 		BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_XCTC_DIR:-${BR2_ENV_OUTPUT_DIR}}"
 		BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_XCTC_DIR:-${BR2_ENV_CCACHE_DIR}}"
 
-		! [[ ${action:?} == make ]] ||
+		! [[ ${command:?} == make ]] ||
 
-		case "x ${action_args[@]} x" in
+		case "x ${command_args[@]} x" in
 		*" all "*|*" toolchain "*|x"  "x)
-			case "x ${action_args[@]} x" in
+			case "x ${command_args[@]} x" in
 			*" sdk "*)
 				true
 				;;
 			*)
-				action_args+=( sdk )
+				command_args+=( sdk )
 				;;
 			esac
 			;;
@@ -259,40 +262,40 @@ function buildroot_cli_dispatcher() { # ...
 
 	##
 
-	local action_env_vars01=()
-	local action_env_vars02=()
-	local action_env_vars03=()
-	local action_env_vars04=()
+	local command_env_vars01=()
+	local command_env_vars02=()
+	local command_env_vars03=()
+	local command_env_vars04=()
 
 	! [[ -n ${BR2_ENV_OUTPUT_DIR} ]] ||
-	action_env_vars01+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
+	command_env_vars01+=( BR2_ENV_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR}" )
 
 	! [[ -n ${BR2_ENV_CCACHE_DIR} ]] ||
-	action_env_vars01+=( BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_DIR}" )
+	command_env_vars01+=( BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_DIR}" )
 
 	! [[ -n ${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}} ]] ||
-	action_env_vars02+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" )
+	command_env_vars02+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" )
 
 	! [[ -n ${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}} ]] ||
-	action_env_vars03+=( BR2_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}}" )
+	command_env_vars03+=( BR2_OUTPUT_DIR="${BR2_ENV_OUTPUT_DIR:-${BR2_OUTPUT_DIR}}" )
 
 	! [[ -n ${BR2_ENV_CCACHE_DIR:-${BR2_CCACHE_DIR}} ]] ||
-	action_env_vars03+=( BR2_CCACHE_DIR="${BR2_ENV_CCACHE_DIR:-${BR2_CCACHE_DIR}}" )
+	command_env_vars03+=( BR2_CCACHE_DIR="${BR2_ENV_CCACHE_DIR:-${BR2_CCACHE_DIR}}" )
 
 	! [[ -n ${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}} ]] ||
-	action_env_vars04+=( BR2_EXTERNAL="${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}}" )
+	command_env_vars04+=( BR2_EXTERNAL="${BR2_ENV_EXTERNAL:-${BR2_EXTERNAL}}" )
 
 	! [[ -n ${BR2_ENV_DL_DIR:-${BR2_DL_DIR}} ]] ||
-	action_env_vars04+=( BR2_DL_DIR="${BR2_ENV_DL_DIR:-${BR2_DL_DIR}}" )
+	command_env_vars04+=( BR2_DL_DIR="${BR2_ENV_DL_DIR:-${BR2_DL_DIR}}" )
 
 	##
 
-	local action_vars=()
+	local command_vars=()
 
 	! [[ -n ${BR2_ENV_OUTPUT_DIR} ]] ||
-	case "${action:?}" in
+	case "${command:?}" in
 	make)
-		action_vars+=( O="${BR2_ENV_OUTPUT_DIR:?}" )
+		command_vars+=( O="${BR2_ENV_OUTPUT_DIR:?}" )
 		;;
 	*)
 		true # don't provide O via env; that name is too general
@@ -301,40 +304,37 @@ function buildroot_cli_dispatcher() { # ...
 
 	##
 
-	local invoke=( xx )
-	local action_cmd=()
+	local invoke=()
+	local command_handler=()
 
-	case "${action:?}" in
+	case "${command:?}" in
 	all-output-trees|install|trip-test)
-		action_cmd=( "$(which "buildroot.${action:?}.sh")" )
-		[ -n "${action_cmd[0]}" ]
+		command_handler=( "buildroot_cli_handler_for_${command//-/_}" )
 
-		action_env_vars+=()
-		action_vars=()
+		command_env_vars+=()
+		command_vars=()
 		;;
 
 	eval)
-		action_cmd=() ; invoke=( xx eval )
+		command_handler=() ; invoke=( eval )
 
-		action_env_vars+=( "${action_vars[@]}" )
-		action_vars=()
+		command_env_vars+=( "${command_vars[@]}" )
+		command_vars=()
 		;;
 
 	make)
-		action_cmd=( "$(which "${action:?}")" )
-		[ -n "${action_cmd[0]}" ]
+		command_handler=( "buildroot_cli_handler_for_${command//-/_}" )
 		;;	
 
 	host-tree|qemu-vm|rootfs-overlay|target-tree)
-		action_cmd=( "$(which "buildroot.${action:?}.sh")" )
-		[ -n "${action_cmd[0]}" ]
+		command_handler=( "buildroot_cli_handler_for_${command//-/_}" )
 
-		action_env_vars+=( "${action_vars[@]}" )
-		action_vars=()
+		command_env_vars+=( "${command_vars[@]}" )
+		command_vars=()
 		;;
 
 	*)
-		echo 1>&2 "${FUNCNAME:?}: unrecognized buildroot action: ${action:?}"
+		echo 1>&2 "${FUNCNAME:?}: unrecognized buildroot command: ${command:?}"
 		return 2
 		;;
 	esac
@@ -342,7 +342,7 @@ function buildroot_cli_dispatcher() { # ...
 	(
 		local x1 i
 
-		case "${action:?}" in
+		case "${command:?}" in
 		all-output-trees|install|trip-test)
 			true
 			;;
@@ -353,7 +353,7 @@ function buildroot_cli_dispatcher() { # ...
 
 		i=0
 
-		for x1 in "${action_env_vars01[@]}" ; do
+		for x1 in "${command_env_vars01[@]}" ; do
 
 			! [[ $((i ++)) -eq 0 ]] || xx :
 
@@ -362,7 +362,7 @@ function buildroot_cli_dispatcher() { # ...
 
 		i=0
 
-		for x1 in "${action_env_vars02[@]}" ; do
+		for x1 in "${command_env_vars02[@]}" ; do
 
 			! [[ $((i ++)) -eq 0 ]] || xx :
 
@@ -371,7 +371,7 @@ function buildroot_cli_dispatcher() { # ...
 
 		i=0
 
-		for x1 in "${action_env_vars03[@]}" ; do
+		for x1 in "${command_env_vars03[@]}" ; do
 
 			! [[ $((i ++)) -eq 0 ]] || xx :
 
@@ -380,20 +380,18 @@ function buildroot_cli_dispatcher() { # ...
 
 		i=0
 
-		for x1 in "${action_env_vars04[@]}" ; do
+		for x1 in "${command_env_vars04[@]}" ; do
 
 			! [[ $((i ++)) -eq 0 ]] || xx :
 
 			eval "xx export $(printf %q "${x1:?}")"
 		done
 
-		xx :
+		( "${invoke[@]}" "${command_handler[@]}" "${command_vars[@]}" "${command_args[@]}" )
 
-		"${invoke[@]}" "${action_cmd[@]}" "${action_vars[@]}" "${action_args[@]}"
+		if [[ "${output_selector:?}" == xctc && ${command:?} == make ]] ; then
 
-		if [[ "${output_selector:?}" == xctc && ${action:?} == make ]] ; then
-
-			case "x ${action_args[@]} x" in
+			case "x ${command_args[@]} x" in
 			*" clean "*|*" distclean "*|*" toolchain-"*"clean "*)
 
 				# no special action to take: build housekeeping should not affect package archive
