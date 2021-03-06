@@ -10,8 +10,8 @@ buildroot_host_tree_debug_p=
 
 ##
 
-source buildroot_config.functions.sh
-source buildroot_make.functions.sh
+source buildroot_api_config.functions.sh
+source buildroot_api_make.functions.sh
 
 ##
 

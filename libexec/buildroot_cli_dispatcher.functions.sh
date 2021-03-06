@@ -12,9 +12,9 @@ buildroot_cli_dispatcher_debug_p=
 
 source snippet_assert.functions.sh
 
-source buildroot_config.functions.sh
-source buildroot_cwd.functions.sh
-source buildroot_xctc_sdk_depot.functions.sh
+source buildroot_api_config.functions.sh
+source buildroot_api_cwd.functions.sh
+source buildroot_api_xctc_sdk_depot.functions.sh
 
 ##
 

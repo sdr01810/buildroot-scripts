@@ -15,7 +15,7 @@
 
 source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
 
-source buildroot_install.functions.sh
+source buildroot_api_install.functions.sh
 
 ##
 

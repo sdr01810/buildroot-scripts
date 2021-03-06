@@ -18,7 +18,7 @@
 
 source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
 
-source buildroot_target_tree.functions.sh
+source buildroot_api_target_tree.functions.sh
 
 ##
 

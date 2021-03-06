@@ -28,7 +28,7 @@
 
 source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
 
-source buildroot_rootfs_overlay.functions.sh
+source buildroot_api_rootfs_overlay.functions.sh
 
 ##
 

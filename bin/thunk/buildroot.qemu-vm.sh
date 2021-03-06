@@ -16,7 +16,7 @@
 
 source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
 
-source buildroot_qemu_vm.functions.sh
+source buildroot_api_qemu_vm.functions.sh
 
 ##
 

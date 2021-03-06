@@ -20,7 +20,7 @@
 
 source "$(dirname "${BASH_SOURCE:?}")"/buildroot-scripts.prolog.sh
 
-source buildroot_all_output_trees.functions.sh
+source buildroot_api_all_output_trees.functions.sh
 
 ##
 

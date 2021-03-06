@@ -22,9 +22,9 @@ source snippet_list_mount_points_below.functions.sh
 
 ##
 
-source buildroot_config.functions.sh
+source buildroot_api_config.functions.sh
 
-source buildroot_rootfs_overlay_tarball.functions.sh
+source buildroot_api_rootfs_overlay_tarball.functions.sh
 
 ##
 

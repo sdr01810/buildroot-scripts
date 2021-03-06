@@ -10,7 +10,7 @@ buildroot_qemu_vm_debug_p=
 
 ##
 
-source buildroot_config.functions.sh
+source buildroot_api_config.functions.sh
 
 ##
 

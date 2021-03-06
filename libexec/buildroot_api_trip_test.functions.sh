@@ -16,7 +16,7 @@ source snippet_test.functions.sh
 
 ##
 
-source buildroot_config.functions.sh
+source buildroot_api_config.functions.sh
 
 ##
 

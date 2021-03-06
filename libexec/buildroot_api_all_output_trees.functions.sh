@@ -10,7 +10,7 @@ buildroot_all_output_trees_debug_p=
 
 ##
 
-source buildroot_config.functions.sh
+source buildroot_api_config.functions.sh
 
 ##
 
