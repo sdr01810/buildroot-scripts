@@ -223,7 +223,7 @@ function buildroot_trip_test_run() { # [ starting_state ]
 	fi
 }
 
-function buildroot_trip_test_run__1() { # [state]
+function buildroot_trip_test_run_1() { # [state]
 
 	local state=${1:?missing value for state} ; shift 1
 
