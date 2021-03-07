@@ -472,11 +472,11 @@ function buildroot_trip_test_run__1() { # [state]
 		expect_xc 0 test -d buildroot-dl-ptb -a -d buildroot-output-main
 		expect_xc 0 test -s buildroot-output-main/images/rootfs.cpio
 
-		expect_xc test -n "$(xx cat buildroot-output-main/images/rootfs.cpio |
-		                     xx cpio -it | xx egrep '^home/debug$')"
+		expect_xc 0 test -n "$(xx cat buildroot-output-main/images/rootfs.cpio |
+		                       xx cpio -it | xx egrep '^home/debug$')"
 
-		expect_xc test -n "$(xx cat buildroot-output-main/images/rootfs.cpio |
-		                     xx cpio -it | xx egrep '^[.]product[.]installation[.]type$')"
+		expect_xc 0 test -n "$(xx cat buildroot-output-main/images/rootfs.cpio |
+		                       xx cpio -it | xx egrep '^[.]product[.]installation[.]type$')"
 		;;
 
 	210|stash.all-outputs)
