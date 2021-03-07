@@ -158,7 +158,7 @@ function list_buildroot_config_variable_names_defined() { # [ --env-omit | --env
 	list_buildroot_config_variable_bindings "$@" | sed -e 's/=.*//'
 }
 
-function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-only } [ --output-xctc | --output-main ]
+function load_buildroot_config() { # [ --defaults { file-too | file-omit | file-only } [ --output-xctc | --output-main | --output-none ]
 
 	local defaults_mode=file-too output_selector=
 
