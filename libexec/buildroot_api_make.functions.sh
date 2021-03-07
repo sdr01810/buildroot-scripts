@@ -16,6 +16,8 @@ source buildroot_api_config.functions.sh
 
 function buildroot_make() { # ...
 
+	xx :
+
 	xx make "$@"
 }
 
