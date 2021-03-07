@@ -11,6 +11,8 @@ build-output
 buildroot
 buildroot-dl
 buildroot-dl-*
+buildroot-ccache
+buildroot-ccache-*
 buildroot-output
 buildroot-output-*
 buildroot.*-from-*.patch
