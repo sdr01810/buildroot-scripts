@@ -61,7 +61,7 @@ function buildroot_cli_dispatcher() { # ...
 		return 2
 		;;
 
-	all-output-trees|install|trip-test)
+	all-output-trees|api|install|trip-test)
 		output_selector="${output_selector:-none}"
 		check_buildroot_output_selector "${output_selector:?}" none || return $?
 		

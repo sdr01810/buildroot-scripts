@@ -27,11 +27,3 @@ source "${this_script_pkg_root:?}"/libexec/buildroot_api.functions.sh
 
 ##
 
-source snippet_sudo_pass_through.functions.sh
-source snippet_sudo_pass_through_real_gid.functions.sh
-source snippet_sudo_pass_through_real_uid.functions.sh
-
-source snippet_xx.functions.sh
-
-##
-

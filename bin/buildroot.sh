@@ -25,6 +25,8 @@
 ## 
 ##     rootfs-overlay [ <any-buildroot-rootfs-overlay-arg> ... ]
 ## 
+##     api [ module ]
+## 
 ## Typical uses:
 ## 
 ##     buildroot.sh
@@ -111,6 +113,11 @@
 ##     buildroot.sh trip-test --run
 ##     buildroot.sh trip-test --clean-only
 ##     buildroot.sh trip-test --clean-first
+##     
+##     ! command -v buildroot || source "$(buildroot api)"
+##     ! command -v buildroot || source "$(buildroot api '')"
+##     ! command -v buildroot || source "$(buildroot api config)"
+##     ! command -v buildroot || for f1 in $(buildroot api config cwd) ; do source "$f1" ; done
 ##     
 ## See also:
 ##
