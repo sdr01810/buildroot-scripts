@@ -8,7 +8,7 @@ set -o pipefail 2>&- || :
 
 ##
 
-this_script_fpn="$(realpath "${BASH_SOURCE[1]}")"
+this_script_fpn="$(realpath -s "${BASH_SOURCE[1]:?}")"
 
 this_script_dpn="$(dirname "${this_script_fpn:?}")"
 this_script_fbn="$(basename "${this_script_fpn:?}")"
@@ -16,6 +16,14 @@ this_script_fbn="$(basename "${this_script_fpn:?}")"
 this_script_pkg_root="$(dirname "${this_script_dpn}")"
 
 PATH="${this_script_pkg_root:?}/bin:${this_script_pkg_root:?}/bin/thunk:${this_script_pkg_root:?}/libexec${PATH:+:${PATH}}"
+
+##
+
+this_script_name=${this_script_fbn%.*sh}
+
+this_script_pkg_root=$(dirname "${this_script_dpn:?}")
+
+source "${this_script_pkg_root:?}"/libexec/buildroot_api.functions.sh
 
 ##
 
