@@ -9,6 +9,10 @@ buildroot_xctc_sdk_depot_debug_p=
 
 ##
 
+source snippet_reverse_lines.functions.sh
+
+##
+
 function buildroot_xctc_sdk_package_name_from_depot_type() { # depot_type
 
 	local depot_type=${1:?missing value for depot_type} ; shift 1
@@ -110,4 +114,65 @@ function trigger_download_of_buildroot_xctc_sdk_on_next_build_within() { # main_
 }
 
 ##
+
+function get_buildroot_xctc_sdk_tarball() { # [ --image ] [ --pa ] [ --dl ]
+
+	local arg build_image_p package_archive_p download_cache_p
+
+	local tarball_fbn="x86_64-buildroot-linux-gnu_sdk-buildroot.tar.gz"
+	#^-- FIXME: compute based on buildroot config; do not hardcode
+
+	for arg in "${@:---image}" ; do case "${arg}" in
+	--image)
+		build_image_p=t
+		;;
+	--pa)
+		package_archive_p=t
+		;;
+	--dl)
+		download_cache_p=t
+		;;
+	'')
+		echo 1>&2 "${FUNCNAME:?}: empty argument"
+		return 2
+		;;
+	*)
+		echo 1>&2 "${FUNCNAME:?}: invalid argument: ${arg:?}"
+		return 2
+		;;
+	esac;done
+
+	! [[ -n ${build_image_p} ]] ||
+	"${FUNCNAME:?}"_1 "${BR2_ENV_OUTPUT_XCTC_DIR:?}/images/${tarball_fbn:?}"
+
+	! [[ -n ${package_archive_p} ]] ||
+	"${FUNCNAME:?}"_1 "${BR2_ENV_DL_PTB_DIR:?}/$(buildroot_xctc_sdk_package_name_from_depot_type package_archive)/${tarball_fbn:?}"
+
+	! [[ -n ${download_cache_p} ]] ||
+	"${FUNCNAME:?}"_1 "${BR2_ENV_DL_PTB_DIR:?}/$(buildroot_xctc_sdk_package_name_from_depot_type download_cache)/${tarball_fbn:?}"
+}
+
+function get_buildroot_xctc_sdk_tarball_1() { # tarball_fpn
+
+	local tarball_fpn=${1:?missing value for tarball_fpn} ; shift 1
+
+	if [[ -f ${tarball_fpn:?} && -s ${tarball_fpn:?} ]] ; then
+
+		echo "${tarball_fpn:?}"
+	fi
+}
+
+function remove_buildroot_xctc_sdk_tarball() { # [ --image ] [ --pa ] [ --dl ]
+
+	local f1 f_count=0
+
+	get_buildroot_xctc_sdk_tarball "${@:---image}" | reverse_lines |
+
+	while read -r f1 ; do
+
+		! [[ $((f_count ++)) -eq 0 ]] || xx :
+
+		xx rm -f "${f1:?}"
+	done
+}
 
