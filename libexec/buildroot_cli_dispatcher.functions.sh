@@ -19,6 +19,8 @@ source "${BASH_SOURCE%_cli_dispatcher.*.sh}"_api.functions.sh
 
 source snippet_assert.functions.sh
 
+source snippet_list_call_stack.functions.sh
+
 ##
 
 function check_buildroot_command() { # actual_value expected_value
@@ -255,6 +257,9 @@ function buildroot_cli_dispatcher() { # ...
 	! [[ -n ${BR2_ENV_CCACHE_DIR} ]] ||
 	command_env_vars01+=( BR2_ENV_CCACHE_DIR="${BR2_ENV_CCACHE_DIR}" )
 
+	! [[ -n ${BR2_ENV_INSTRUMENTATION_SCRIPTS:-${BR2_INSTRUMENTATION_SCRIPTS}} ]] ||
+	command_env_vars02+=( BR2_INSTRUMENTATION_SCRIPTS="${BR2_ENV_INSTRUMENTATION_SCRIPTS:-${BR2_INSTRUMENTATION_SCRIPTS}}" )
+
 	! [[ -n ${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}} ]] ||
 	command_env_vars02+=( BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}" )
 
@@ -325,6 +330,11 @@ function buildroot_cli_dispatcher() { # ...
 	(
 		local x1 i
 
+		if [[ -n ${buildroot_cli_dispatcher_debug_p} ]] ; then
+
+			trap "${FUNCNAME:?}__report_return \$? \${state:?}" EXIT
+		fi
+
 		if [[ ${output_selector:?} != none ]] ; then
 
 			pushd_buildroot
@@ -389,3 +399,16 @@ function buildroot_cli_dispatcher() { # ...
 	)
 }
 
+function buildroot_cli_dispatcher__report_return() { # rc state
+
+	local rc=${1:?missing value for rc} ; shift 1
+
+	local state=${1:?missing value for state} ; shift 1
+
+	if [[ ${rc:?} -ne 0 ]] ; then
+
+		echo 1>&2 "DEBUG: ${FUNCNAME%__report_return}: returning; rc: ${rc:?}; state: ${state}"
+
+		list_call_stack 1>&2
+	fi
+}

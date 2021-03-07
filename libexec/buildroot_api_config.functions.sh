@@ -362,13 +362,22 @@ function load_buildroot_config__overlay_br2_env_onto_br2() {
 		eval "${br2_variable_name:?}=$(printf %q "${!br2_env_variable_name}")"
 	done
 
+	BR2_DEBUG_WRAPPER="${BR2_ENV_DEBUG_WRAPPER:-${BR2_DEBUG_WRAPPER}}"
+
+	BR2_INSTRUMENTATION_SCRIPTS="${BR2_ENV_INSTRUMENTATION_SCRIPTS:-${BR2_INSTRUMENTATION_SCRIPTS}}"
+
+	#^-- These variables are special because they cannot be set via the .config file.
+	#^-- See `buildroot/Makefile` and the buildroot docs for further details.
+	#^-- 
+	#^-- To compensate, always overlay each with its BR2_ENV equivalent manually.
+
 	BR2_DL_DIR="${BR2_ENV_DL_DIR:-${BR2_ENV_DL_PTB_DIR:?missing value for BR2_ENV_DL_PTB_DIR}}"
 
-	#^-- This variable is 'special' because it is involved in bootstrapping the build.
+	#^-- This variable is special because it is involved in bootstrapping the build.
 	#^-- Consequently, its value in the buildroot .config file is often wrong.
 	#^-- See `buildroot/Makefile` and the buildroot docs for further details.
 	#^-- 
-	#^-- To compensate, always overload it with its environment variable equivalent(s).
+	#^-- To compensate, always overlay it with its BR2_ENV equivalent(s) manually.
 }
 
 function print_buildroot_config() {

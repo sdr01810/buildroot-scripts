@@ -27,6 +27,7 @@ buildroot_api_modules=(
 	all_output_trees
 	config
 	cwd
+	event_handling
 	host_tree
 	install
 	kernel_arch
