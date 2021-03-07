@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides functions that perform special actions provided by the buildroot makefiles.
 ## 
 

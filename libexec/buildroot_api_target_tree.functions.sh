@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides function buildroot_target_tree() and friends.
 ## 
 

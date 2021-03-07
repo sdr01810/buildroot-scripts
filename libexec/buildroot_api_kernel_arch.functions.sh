@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides utility functions for working with buildroot kernel architecture monikers.
 ## 
 

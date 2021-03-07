@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides function buildroot_trip_test() and friends.
 ##
 

@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides function buildroot_rootfs_overlay() and friends.
 ##
 

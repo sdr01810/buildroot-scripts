@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Provides function buildroot_qemu_vm() and friends.
 ## 
 

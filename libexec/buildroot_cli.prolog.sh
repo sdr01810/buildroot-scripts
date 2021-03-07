@@ -1,4 +1,4 @@
-##/bin/bash
+#!/bin/bash sourced
 ## Source'd at the beginning of all scripts in this installation set.
 ## 
 
