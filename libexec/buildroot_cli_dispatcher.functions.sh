@@ -176,8 +176,8 @@ function buildroot_cli_dispatcher() { # ...
 
 	case "${output_selector:?}" in
 	none)
-		BR2_ENV_OUTPUT_DIR="NONE"
-		BR2_ENV_CCACHE_DIR="NONE"
+		BR2_ENV_OUTPUT_DIR=:none
+		BR2_ENV_CCACHE_DIR=:none
 		;;
 
 	main)
@@ -334,36 +334,36 @@ function buildroot_cli_dispatcher() { # ...
 
 		for x1 in "${command_env_vars01[@]}" ; do
 
-			! [[ $((i ++)) -eq 0 ]] || xx :
+			! [[ $((i ++)) -eq 0 ]] || xx_lod 5 :
 
-			eval "xx export $(printf %q "${x1:?}")"
+			eval "xx_lod 5 export $(printf %q "${x1:?}")"
 		done
 
 		i=0
 
 		for x1 in "${command_env_vars02[@]}" ; do
 
-			! [[ $((i ++)) -eq 0 ]] || xx :
+			! [[ $((i ++)) -eq 0 ]] || xx_lod 5 :
 
-			eval "xx export $(printf %q "${x1:?}")"
+			eval "xx_lod 5 export $(printf %q "${x1:?}")"
 		done
 
 		i=0
 
 		for x1 in "${command_env_vars03[@]}" ; do
 
-			! [[ $((i ++)) -eq 0 ]] || xx :
+			! [[ $((i ++)) -eq 0 ]] || xx_lod 3 :
 
-			eval "xx export $(printf %q "${x1:?}")"
+			eval "xx_lod 3 export $(printf %q "${x1:?}")"
 		done
 
 		i=0
 
 		for x1 in "${command_env_vars04[@]}" ; do
 
-			! [[ $((i ++)) -eq 0 ]] || xx :
+			! [[ $((i ++)) -eq 0 ]] || xx_lod 3 :
 
-			eval "xx export $(printf %q "${x1:?}")"
+			eval "xx_lod 3 export $(printf %q "${x1:?}")"
 		done
 
 		( "${invoke[@]}" "${command_handler[@]}" "${command_vars[@]}" "${command_args[@]}" )
