@@ -26,7 +26,7 @@ function check_buildroot_command() { # actual_value expected_value
 	if [ "${1}" != "${2}" ] ; then
 
 		echo 1>&2 "${this_script_fbn:?}: incorrect command: ${1}; expected: ${2}"
-		false
+		return 2
 	fi
 }
 
@@ -35,7 +35,7 @@ function check_buildroot_output_selector() { # actual_value expected_value
 	if [ "${1}" != "${2}" ] ; then
 
 		echo 1>&2 "${this_script_fbn:?}: incorrect output selector: ${1}; expected: ${2}"
-		false
+		return 2
 	fi
 }
 
@@ -49,7 +49,7 @@ function buildroot_cli_dispatcher() { # ...
 
 	while [ $# -gt 0 ] ; do
 	case "${1}" in
-	--output-main|--output-rol|--output-xctc)
+	--output-main|--output-none|--output-rol|--output-xctc)
 		output_selector="${1#--output-}"
 
 		shift 1
@@ -61,9 +61,9 @@ function buildroot_cli_dispatcher() { # ...
 		return 2
 		;;
 
-	all-output-trees)
-		output_selector="${output_selector:-${1:?}}"
-		check_buildroot_output_selector "${output_selector:?}" "${1:?}" || return $?
+	all-output-trees|install|trip-test)
+		output_selector="${output_selector:-none}"
+		check_buildroot_output_selector "${output_selector:?}" none || return $?
 		
 		command="${command:-${1:?}}"
 		check_buildroot_command "${command:?}" "${1:?}" || return $?
@@ -74,8 +74,8 @@ function buildroot_cli_dispatcher() { # ...
 		;;
 
 	eval)
-		command="${command:-eval}"
-		check_buildroot_command "${command:?}" "eval" || return $?
+		command="${command:-${1:?}}"
+		check_buildroot_command "${command:?}" "${1:?}" || return $?
 
 		shift 1 ; command_args+=( "$@" )
 
@@ -85,7 +85,6 @@ function buildroot_cli_dispatcher() { # ...
 	host-tree|target-tree)
 		case "${output_selector:-main}" in
 		main|xctc)
-			true
 			;;
 		*)
 			echo 1>&2 "${FUNCNAME:?}: unsupported command for ${output_selector:?} build: ${1:?}"
@@ -93,18 +92,6 @@ function buildroot_cli_dispatcher() { # ...
 			;;
 		esac
 
-		command="${command:-${1:?}}"
-		check_buildroot_command "${command:?}" "${1:?}" || return $?
-
-		shift 1 ; command_args+=( "$@" )
-
-		shift $#
-		;;
-
-	install|trip-test)
-		output_selector="${output_selector:-${1:?}}"
-		check_buildroot_output_selector "${output_selector:?}" "${1:?}" || return $?
-		
 		command="${command:-${1:?}}"
 		check_buildroot_command "${command:?}" "${1:?}" || return $?
 
@@ -182,18 +169,13 @@ function buildroot_cli_dispatcher() { # ...
 	command="${command:-make}"
 	output_selector="${output_selector:-main}"
 
-	case "${output_selector:?}" in
-	all-output-trees|install|trip-test)
-		true
-		;;
+	if [[ ${output_selector:?} != none ]] ; then
 
-	*)
 		load_buildroot_config
-		;;
-	esac
+	fi
 
 	case "${output_selector:?}" in
-	all-output-trees|install|trip-test)
+	none)
 		BR2_ENV_OUTPUT_DIR="NONE"
 		BR2_ENV_CCACHE_DIR="NONE"
 		;;
@@ -307,49 +289,46 @@ function buildroot_cli_dispatcher() { # ...
 	local invoke=()
 	local command_handler=()
 
-	case "${command:?}" in
-	all-output-trees|install|trip-test)
+	case "${output_selector:?}:${command:?}" in
+	none:*)
 		command_handler=( "buildroot_cli_handler_for_${command//-/_}" )
 
 		command_env_vars+=()
 		command_vars=()
 		;;
 
-	eval)
+	*:eval)
 		command_handler=() ; invoke=( eval )
 
 		command_env_vars+=( "${command_vars[@]}" )
 		command_vars=()
 		;;
 
-	make)
+	*:make)
 		command_handler=( "buildroot_cli_handler_for_${command//-/_}" )
 		;;	
 
-	host-tree|qemu-vm|rootfs-overlay|target-tree)
+	*)
 		command_handler=( "buildroot_cli_handler_for_${command//-/_}" )
 
 		command_env_vars+=( "${command_vars[@]}" )
 		command_vars=()
 		;;
+	esac
 
-	*)
+	if [[ $(type -t ${command_handler[0]}) == '' ]] ; then
+
 		echo 1>&2 "${FUNCNAME:?}: unrecognized buildroot command: ${command:?}"
 		return 2
-		;;
-	esac
+	fi
 
 	(
 		local x1 i
 
-		case "${command:?}" in
-		all-output-trees|install|trip-test)
-			true
-			;;
-		*)
+		if [[ ${output_selector:?} != none ]] ; then
+
 			pushd_buildroot
-			;;
-		esac
+		fi
 
 		i=0
 
