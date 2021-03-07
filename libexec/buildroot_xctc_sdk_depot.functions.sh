@@ -53,9 +53,9 @@ function register_buildroot_xctc_sdk_with_depot() { # depot_type depot_root xctc
 
 			[[ -e ${x1:?} ]] || continue
 
-			[[ -e ${d2:?} ]] || xx mkdir -p "${d2:?}"
+			[[ -e ${d2:?} ]] || (xx : && xx mkdir -p "${d2:?}")
 
-			xx rsync -a -i -c "${x1:?}" "${x2:?}"
+			xx : && xx rsync -a -i -c "${x1:?}" "${x2:?}"
 
 			#^-- FIXME: what if someone is downloading during the rsync? safe?
 		done;done
@@ -84,7 +84,7 @@ function withdraw_buildroot_xctc_sdk_from_depot() { # depot_type depot_root xctc
 
 			[[ -e ${d2:?} && -e ${x1:?} ]] || continue
 
-			xx rm -rf "${x2:?}"
+			xx : && xx rm -rf "${x2:?}"
 
 			#^-- FIXME: what if someone is downloading during the removal? safe?
 		done;done
@@ -105,7 +105,7 @@ function trigger_download_of_buildroot_xctc_sdk_on_next_build_within() { # main_
 
 		[[ -e ${d2:?} ]] || continue
 
-		xx rm -rf "${d2:?}"/.stamp_downloaded
+		xx : && xx rm -rf "${d2:?}"/.stamp_downloaded
 	done;done
 }
 
