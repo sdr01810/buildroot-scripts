@@ -492,14 +492,14 @@ function buildroot_trip_test_run__1() { # [state]
 
 				xx :
 
-				xx rsync -a --delete "${d1:?}"{,.~lkg~}/ # lkg == last known good
+				xx sudo_pass_through rsync -a --delete "${d1:?}"{,.~lkg~}/ # lkg == last known good
 			done
 
 			for f1 in buildroot-output-rol.tar ; do
 
 				xx :
 
-				xx rsync -a --delete "${f1:?}"{,.~lkg~} # lkg == last known good
+				xx sudo_pass_through rsync -a --delete "${f1:?}"{,.~lkg~} # lkg == last known good
 			done
 		fi
 		;;
@@ -570,11 +570,11 @@ function buildroot_trip_test_run__1() { # [state]
 function buildroot_trip_test_clean() { #
 
 	xx :
-	xx rm -rf buildroot-output-rol.tar
-	xx rm -rf buildroot-output-rol
+	xx sudo_pass_through rm -rf buildroot-output-rol.tar
+	xx sudo_pass_through rm -rf buildroot-output-rol
 
 	xx :
-	xx rm -rf buildroot-dl-rol
+	xx sudo_pass_through rm -rf buildroot-dl-rol
 
 	xx :
 	xx rm -rf buildroot-output-main
