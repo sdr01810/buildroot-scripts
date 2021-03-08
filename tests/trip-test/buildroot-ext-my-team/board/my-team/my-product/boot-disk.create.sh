@@ -14,12 +14,7 @@
 ##     boot-disk.create.sh
 ##
 
-set -e
-
-set -o pipefail 2>&- || :
-
-this_script_dpn="$(dirname "${0}")"
-this_script_fbn="$(basename "${0}")"
+source "$(dirname "$0")"/buildroot-hook.prolog.sh
 
 ##
 ## snippets:
